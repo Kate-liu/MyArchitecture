@@ -1522,6 +1522,14 @@ UML 中这种分组机制叫包（Package)。引入包是为了降低系统的�
 
 
 
+### 架构设计⽂档模板 
+
+[架构设计⽂档模板 markdown](./SoftwareDesignDemo.md) 
+
+[架构设计⽂档模板 pdf](./SoftwareDesignDemo.pdf)
+
+
+
 ## 架构之美：如何遵循康威定律做出优秀架构？
 
 
