@@ -2161,13 +2161,13 @@ Gang of Four ,(Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides）提
 
 
 
-### 类图
+#### 类图
 
 ![1609079790943](ArchitectureAdvanced.assets/1609079790943.png)
 
 
 
-### 合作图
+#### 合作图
 
 ![1609079809795](ArchitectureAdvanced.assets/1609079809795.png)
 
@@ -2175,19 +2175,246 @@ Gang of Four ,(Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides）提
 
 
 
-copy 程序结构图
+#### 根据 UML 想象程序代码 Button
+
+```java
+public class Button {
+    public final static int SEND_BUTTON = -99;
+
+    private Dialer dialer;
+    private int token;
+
+    public Button(int token, Dialer dialer) {
+        this.token = token;
+        this.dialer = dialer;
+    }
+}
+```
+
+
+
+#### 根据 UML 想象程序代码 press
+
+```java
+    public void press() {
+        switch (token) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                dialer.dial();
+                break;
+
+            case SEND_BUTTON:
+                dialer.dial();
+                break;
+
+            default:
+                throw new UnsupportedOperationException("unknown button pressed: token =" + token)
+        }
+    }
+```
+
+
+
+
+
+#### 根据 UML 想象程序代码 Dialer
+
+```java
+public class Dialer {
+    public void enterDigit(int digit) {
+        screen.display(digit);
+        speeker.beep(digit);
+    }
+
+    public void dial() {
+        screen.display("dialing...");
+        radio.connect();
+    }
+}
+
+```
+
+
+
+### 软件设计的臭味
+
+软件设计的**最终目的**，是使软件达到“强内聚，松耦合”，从而使软件：
+
+- 易扩展，易于增加新的功能
+- 更强壮，不容易被粗心的程序员破坏
+- 可移植，能够在多样的环境下运行
+- 更简单，容易理解，容易维护
+
+与之相反，一个“不好的”软件，会发出如下**臭味**：
+
+- 僵硬，不易改变
+- 脆弱，指向该A，结果B被意外破坏
+- 不可抑制，不能适应环境的变化
+- 导致误用的陷阱，做错误的事比做正确的事更容易，引诱程序员破坏原有的设计
+- 晦涩，代码难以理解
+- 过度设计，copy-paste 代码
+
+**僵化性（ Rigidity）** ：很难对系统进行改动，因为每个改动都会迫使许多对系统其他部分的改动。
+
+- 如果单一的改动会导致依赖关系的模块中的连锁改动，那么设计就是僵化的，必须要改动的模块越多，设计就越僵化。
+
+**脆弱性（Fragility）** ：对系统的改动会导致系统中和改动的地方无关的许多地方出现问题。
+
+- 出现新问题的地方与改动的地方没有概念上的关联。要修正这些问题又会引出更多的问题，从而使开发团队就像一只不停追逐自己尾巴的狗一样。
+
+**牢固性（Immobility）** ： 很难解开系统的纠结，使之成为一些可在其他系统中重用的组件。
+
+- 设计中包含了对其他系统有用的部分，而把这些部分从系统中分离出来所需的努力和风险是巨大的。
+
+**粘滞性（Viscosity）** ：做正确的事情比做错误的事情要困难。
+
+- 面临一个改动的时候，开发人员常常会发现会有多种改动的方法。有的方法会保持系统原来的设计，而另外一些则会破坏设计，当那些可以保持系统设计的方法比那些破坏设计的方法更难应用时，就表明设计具有高的粘滞性，作错误的事情就很容易。
+
+**不必要的复杂性（Needless Complexity）** ：设计中包含有不具任何直接好处的基础结构
+
+- 如果设计中包含有当前没有用的组成部分，他就含有不必要的复杂性。当开发人员预测需求的变化，并在软件中放置了处理那些潜在变化的代码时，常常会出现这种情况。
+
+**不必要的重复（ Needless Repetition）** ：设计中包含有重复的结构，而该重复的结构本可以使用单一的抽象进行统-。
+
+- 当copy， cut， paste 编程的时候，这种情况就会发生。
+
+**晦涩性（Opacity）** ：很难阅读、理解。没有很好的表现出意图。
+
+- 代码可以用清晰、富有表现力的方式编写，也可以用晦涩、费解的方式编写。一般说来，随着时间的推移，代码会变得越来越晦涩。
+
+
+
+### 一个设计腐化过程的例子
+
+- 编一个从键盘读入字符并输出到打印机的程序
+
+
+
+#### copy 程序结构图
 
 ![1609079841798](ArchitectureAdvanced.assets/1609079841798.png)
 
-copy 程序
+#### copy 程序
+
+```java
+void copy() {
+    int c;
+    while ((c = RdKbd()) != EOF) {
+        WrtPrt(c);
+    }
+}
+```
+
+
+
+#### copy 程序的第一次修改
+
+几个月以后，老板来找你，说希望 copy 程序能从纸带机中读入信息。
+
+```java
+boolean ptFlag = false;
+// remember to reset this flag
+
+void copy() {
+    int c;
+    while ((c = (ptFlag ? Rdpt() : RdKbd())) != EOF) {
+        WrtPrt(c);
+    }
+}
+```
+
+
+
+#### copy 程序的第二次修改
+
+几个月以后，老板来找你，说客户有时候需要输出纸带打印机上。
+
+```java
+boolean ptFlag = false;
+boolean punchFlag = false;
+// remember to reset these flag
+
+void copy() {
+    int c;
+    while ((c = (ptFlag ? Rdpt() : RdKbd())) != EOF) {
+        punchFlag ? WrtPunch(c) : WrtPrt(c);
+    }
+}
+```
+
+
+
+
+
+#### 一个遵循 OOD 原则的设计
+
+```java
+public interface Reader {
+    public int read();
+}
+
+public class KeyboardReader implements Reader {
+
+    @Override
+    public int read() {
+        return readKeyboard();
+    }
+}
+
+Reader reader = new KeyboardReader();
+Writer writer = new Printer();
+
+public void copy() {
+  int c;
+  while ((c = reader.read()) != EOF) {
+    writer.write();
+  }
+}
+```
+
+
 
 
 
 ### 回顾 buttone/ Dialer
 
+有什么臭味吗？
+
 ![1609080089077](ArchitectureAdvanced.assets/1609080089077.png)
 
+- 僵硬 不易增加、修改：
+  - 增加一种Button类型，就需要对Button类进行修改；
+  - 修改Dialer，可能会影响Button。
+- 脆弱- switch case/if else语句是相当脆弱的。
+  - 当我想修改Send按钮的功能时，有可能不小心破坏数字按钮；
+  - 当这种函数很多时，我很有可能会漏掉某个函数，或其中的某个条件分支。
+- 不可移植-设想我们要设计密码锁的按钮，它只需要数字按键，但Button的设计使它必须"附带”一个"Send"类型的按钮。
 
+
+
+### OOD原则一：开/闭原则（OCP）
+
+OCP - Open/Closed Principle
+
+- 对于扩展是开放的（Open for extension ）
+- 对于更改是封闭的（Closed for modification）
+- 简言之：不需要修改软件实体（类、模块、函数等） ，就应该能实现功能的扩展。
+
+传统的扩展模块的方式就是修改模块的源代码。如何实现不修改而扩展呢？
+
+- 关键是抽象！
+
+
+
+#### 改进 Button: 方法一
 
 ![1609080126031](ArchitectureAdvanced.assets/1609080126031.png)
 
