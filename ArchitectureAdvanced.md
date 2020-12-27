@@ -2163,121 +2163,125 @@ Gang of Four ,(Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides）提
 
 ### 类图
 
+![1609079790943](ArchitectureAdvanced.assets/1609079790943.png)
 
 
 
+### 合作图
 
+![1609079809795](ArchitectureAdvanced.assets/1609079809795.png)
 
 
 
 
 
+copy 程序结构图
 
+![1609079841798](ArchitectureAdvanced.assets/1609079841798.png)
 
+copy 程序
 
 
 
+### 回顾 buttone/ Dialer
 
+![1609080089077](ArchitectureAdvanced.assets/1609080089077.png)
 
 
 
+![1609080126031](ArchitectureAdvanced.assets/1609080126031.png)
 
 
 
+![1609080138541](ArchitectureAdvanced.assets/1609080138541.png)
 
 
 
 
 
+![1609080148058](ArchitectureAdvanced.assets/1609080148058.png)
 
 
 
+![1609080157086](ArchitectureAdvanced.assets/1609080157086.png)
 
 
 
+![1609080169793](ArchitectureAdvanced.assets/1609080169793.png)
 
+![1609080183940](ArchitectureAdvanced.assets/1609080183940.png)
 
+![1609080195030](ArchitectureAdvanced.assets/1609080195030.png)
 
 
 
+![1609080204612](ArchitectureAdvanced.assets/1609080204612.png)
 
 
 
+![1609080251837](ArchitectureAdvanced.assets/1609080251837.png)
 
+![1609080263250](ArchitectureAdvanced.assets/1609080263250.png)
 
 
 
+![1609080272711](ArchitectureAdvanced.assets/1609080272711.png)
 
+![1609080281255](ArchitectureAdvanced.assets/1609080281255.png)
 
+![1609080290092](ArchitectureAdvanced.assets/1609080290092.png)
 
+![1609080300124](ArchitectureAdvanced.assets/1609080300124.png)
 
+![1609080307734](ArchitectureAdvanced.assets/1609080307734.png)
 
+![1609080318727](ArchitectureAdvanced.assets/1609080318727.png)
 
 
 
+![1609080328432](ArchitectureAdvanced.assets/1609080328432.png)
 
+![1609080341454](ArchitectureAdvanced.assets/1609080341454.png)
 
+![1609080351501](ArchitectureAdvanced.assets/1609080351501.png)
 
 
 
+![1609080364486](ArchitectureAdvanced.assets/1609080364486.png)
 
+![1609080377066](ArchitectureAdvanced.assets/1609080377066.png)
 
+![1609080387163](ArchitectureAdvanced.assets/1609080387163.png)
 
 
 
+![1609080395985](ArchitectureAdvanced.assets/1609080395985.png)
 
 
 
+![1609080405548](ArchitectureAdvanced.assets/1609080405548.png)
 
+![1609080423706](ArchitectureAdvanced.assets/1609080423706.png)
 
 
 
+![1609080436943](ArchitectureAdvanced.assets/1609080436943.png)
 
+![1609080450695](ArchitectureAdvanced.assets/1609080450695.png)
 
+![1609080462295](ArchitectureAdvanced.assets/1609080462295.png)
 
 
 
+![1609080477891](ArchitectureAdvanced.assets/1609080477891.png)
 
+![1609080489512](ArchitectureAdvanced.assets/1609080489512.png)
 
+![1609080511271](ArchitectureAdvanced.assets/1609080511271.png)
 
+![1609080524832](ArchitectureAdvanced.assets/1609080524832.png)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![1609080538730](ArchitectureAdvanced.assets/1609080538730.png)
 
 
 
