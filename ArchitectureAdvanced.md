@@ -3037,33 +3037,105 @@ TimerClient 也被迫改变:
 
 
 
+### 课后练习
+
+- 请描述什么是依赖倒置原则，为什么有时候依赖倒置原则又被称为好莱坞原则？
+- 请描述一个你熟悉的框架，是如何实现依赖倒置原则的。
+- 请用接口隔离原则优化 Cache 类的设计，画出优化后的类图。
+
+![1609080395985](ArchitectureAdvanced.assets/1609080395985.png)
+
+
+
+
+
 
 
 ## 案例：反应式编程框架 Flower 的设计
+
+#### 程序是如何运行又是如何崩溃的
 
 ![1609080423706](ArchitectureAdvanced.assets/1609080423706.png)
 
 
 
+#### Flower 反应式重构前后性能对比
+
 ![1609080436943](ArchitectureAdvanced.assets/1609080436943.png)
 
+
+
+#### 为什么 Flower  可以显著提升系统性能？
+
 ![1609080450695](ArchitectureAdvanced.assets/1609080450695.png)
+
+
+
+#### Flower 实现异步的基础是Akka的Actor
 
 ![1609080462295](ArchitectureAdvanced.assets/1609080462295.png)
 
 
 
+#### 5分钟上手 Flower  反应式编程
+
 ![1609080477891](ArchitectureAdvanced.assets/1609080477891.png)
+
+
+
+#### Flower 可视化流程编排
 
 ![1609080489512](ArchitectureAdvanced.assets/1609080489512.png)
 
+
+
+#### 兼容 Spring的 Flower Web 开发
+
+![1609141681512](ArchitectureAdvanced.assets/1609141681512.png)
+
+
+
+#### Flower 异步数据库访问
+
+![1609141715216](ArchitectureAdvanced.assets/1609141715216.png)
+
+
+
+#### Flower 核心模块设计
+
 ![1609080511271](ArchitectureAdvanced.assets/1609080511271.png)
 
+
+
+#### Flower 的分布式异步微服务解决方案
+
 ![1609080524832](ArchitectureAdvanced.assets/1609080524832.png)
+
+
+
+#### 为什么选择Flower
+
+Flower 与 WebFlux、RxJava的比较优势
+
+- 开发工程师无需学习函数式编程即可开发反应式系统
+- 纯消息驱动，可以实现更灵活的扩展（事件溯源、分布式事务，限流)
+
+- 更好的性能与更低的成本
+  - 更好的性能意味着用更少的机器就可以满足系统的并发压力
+- 更高的可用性
+  - 消息驱动天然限流特性使系统在过高并发和部分组件失效的情况下保障系统不会崩溃
+
+
+
+#### Flower 开发
+
+- link：https://github.com/zhihuili/flower
 
 ![1609080538730](ArchitectureAdvanced.assets/1609080538730.png)
 
 
+
+## 面向对象的设计模式
 
 
 
