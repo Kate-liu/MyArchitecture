@@ -2414,79 +2414,632 @@ OCP - Open/Closed Principle
 
 
 
-#### 改进 Button: 方法一
+#### 改进 Button: 方法一 简单继承
+
+- 接口继承出两个类，一个实现 数字按钮，另一个实现发送按钮
 
 ![1609080126031](ArchitectureAdvanced.assets/1609080126031.png)
 
 
 
+#### 改进 Button: 方法二 策略模式 
+
+- 防止过多的重复代码，使用一个 按钮接口
+
 ![1609080138541](ArchitectureAdvanced.assets/1609080138541.png)
 
 
 
+#### 改进 Button: 方法三 适配器模式
 
+- 将写死的按钮匹配，进行动态的分发，可以实现多个Adapter
 
 ![1609080148058](ArchitectureAdvanced.assets/1609080148058.png)
 
 
 
+#### 改进 Button: 方法四：观察者模式
+
+- 当添加按键的声音事件的时候，可以使用 listener 接口实现
+
 ![1609080157086](ArchitectureAdvanced.assets/1609080157086.png)
 
 
 
+#### 想像代码（ButtonListener 接口）
+
+```java
+public interface ButtonListener {
+    void buttonPressed();
+}
+```
+
+
+
+#### 想像代码（Button 类）
+
+```java
+public class Button {
+    private List<ButtonListener> listeners;
+
+    public Button() {
+        this.listeners = new LinkedList<ButtonListener>();
+    }
+
+    public void addListener(ButtonListener listener) {
+        assert listener != null;
+        listeners.add(listener);
+    }
+
+    public void press() {
+        for (ButtonListener listener : listeners) {
+            listener.buttonPressed();
+        }
+    }
+}
+```
+
+
+
+#### 想像代码（Phone 类-用来组装）
+
+```java
+public class Phone {
+    private Dialer dialer;
+    private Button[] digitButtons;
+    private Button sendButton;
+
+    public Phone() {
+        dialer = new Dialer();
+        digitButtons = new Button[10];  // 数字按钮
+
+        for (int i = 0; i < digitButtons.length; i++) {
+            digitButtons[i] = new Button();
+
+            final int digit = i;
+
+            digitButtons[i].addListener(new ButtonListener() {
+
+                @Override
+                public void buttonPressed() {
+                    dialer.enterDigit(digit);
+                }
+            });
+        }
+
+        sendButton = new Button();  // 发送按钮
+        sendButton.addListener(new ButtonListener() {
+
+            @Override
+            public void buttonPressed() {
+                dialer.dial();
+            }
+        });
+    }
+
+    public static void main(String[] args) {
+        Phone phone = new Phone();
+
+        phone.digitButtons[9].press();
+        phone.digitButtons[1].press();
+        phone.digitButtons[1].press();
+
+        phone.sendButton.press();
+
+    }
+
+}
+```
+
+
+
+### OOD原则二：依赖倒置原则(DIP)
+
+DIP - Dependency Inversion Principle
+
+- 高层模块不能依赖低层模块，而是大家都依赖于抽象;
+- 抽象不能依赖实现，而是实现依赖抽象。
+
+DIP倒置了什么?
+
+- 模块或包的依赖关系
+- 开发顺序和职责
+
+软件的层次化
+
+- 高层决定低层
+- 高层被重用
+
 ![1609080169793](ArchitectureAdvanced.assets/1609080169793.png)
+
+
+
+#### 遵循 DIP 的层次依赖关系
+
+- 顶层的策略，依赖于策略服务接口
+- 原理层，依赖上层抽象
 
 ![1609080183940](ArchitectureAdvanced.assets/1609080183940.png)
 
+
+
+#### 违反 DIP 案例
+
+- 按钮不应该依赖于灯的开关
+
 ![1609080195030](ArchitectureAdvanced.assets/1609080195030.png)
 
-
+- 按钮，应该依赖于按钮服务的接口，下层灯实现上层服务的接口
 
 ![1609080204612](ArchitectureAdvanced.assets/1609080204612.png)
 
 
 
+#### 架构的核心
+
+好莱坞规则：
+
+- Don't call me, I'll call you
+
+倒转的层次依赖关系
+
 ![1609080251837](ArchitectureAdvanced.assets/1609080251837.png)
+
+
+
+#### 找出Button背后的抽象
+
+Button的本质是什么?
+
+- 检测用户的按键指令，并传递给目标对象
+
+用什么机制检测用户的按键?
+
+- 不重要
+
+目标对象是什么?
+
+- 不重要
+
+
+
+### OOD原则三：Liskov替换原则(LSP)
+
+在Java/C++这样的静态类型语言中，实现OCP 的关键在于抽象，而抽象的威力在于**多态和继承**。
+
+- 一个正确的继承要符合什么要求呢?
+- 答案:Liskov替换原则
+
+1988年，Barbara Liskov描述这个原则:
+
+- 若对每个类型T1的对象o1，都存在一个类型T2的对象 o2，使得在所有针对T2编写的程
+  序P中，用o1替换o2后，程序Р的行为功能不变，则T1是T2的子类型。
+- 简言之:子类型(subtype）必须能够替换掉它们的基类型(base type)。
+
+
+
+#### 举例说明
+
+假设: Horse是WhiteHorse和 BlackHorse的基类
+
+在使用Horse对象的任何场合，我们可以把 WhiteHorse对象传进去，以取代 Horse对象，程序仍然正确。（但是小马 is 马，就不可以在任何场景下取代马了。）
 
 ![1609080263250](ArchitectureAdvanced.assets/1609080263250.png)
 
 
 
+#### LSP的反命题不成立
+
+墨子曾经曰过:《墨子 小取》
+
+- “娣，美人也，爱娣，非爱美人也...
+
 ![1609080272711](ArchitectureAdvanced.assets/1609080272711.png)
+
+
+
+#### 违反 LSP 的案例一
+
+- 一旦在程序中使用if判断，多个的时候，就已经违反了里氏替换原则
+
+```java
+    void drawShape(Shape shape) {
+        if (shape instanceof Circle) {
+            drawCircle((Circle) shape);
+        } else if (shape instanceof Square) {
+            drawSquare((Square) shape);
+        } else {
+            // ....
+        }
+    }
+```
+
+
+
+#### 违反 LSP 的案例二
+
+不符合IS-A关系的继承，一定不符合LSP
+
+JDK中的错误设计:
 
 ![1609080281255](ArchitectureAdvanced.assets/1609080281255.png)
 
+
+
+#### 违反 LSP 的案例三
+
+下面是一个 长方形 类，接着创建一个 正方形类。
+
+```java
+public class Rectangle {
+    private double width;
+    private double height;
+
+    public void setWidth(double w) {
+        width = w;
+    }
+
+    public void setHeight(double h) {
+        height = h;
+    }
+
+    private double getWidth() {
+        return this.width;
+    }
+
+    private double getHeight() {
+        return this.height;
+    }
+}
+```
+
+
+
+#### 正方形 IS-A 长方形吗？
+
+Rectangle 包含 width 和 height，但 Square 只需要 side 就可以了。
+
+```java
+public class Square extends Rectangle {
+    @Override
+    public void setWidth(double w) {
+        width = height = w;
+    }
+
+    @Override
+    public void setHeight(double h) {
+        height = width = h;
+    }
+}
+```
+
+假如有一个方法：
+
+```java
+    void testArea(Rectangle rect) {
+        rect.setWidth(3);
+        rect.setHeight(4);
+
+        assert 12 == rect.calculatedArea(); // 传入Square，正方形的时候将会断言失败
+    }
+```
+
 ![1609080290092](ArchitectureAdvanced.assets/1609080290092.png)
+
+
+
+#### 为什么正方形IS-NOT-A长方形呢?
+
+IS-A关系是关于**行为**的。
+
+- 从行为方式来看，正方形和长方形是不同的。
+
+从对象的属性来证明这一论点，对于同一个类，所创建的不同对象，它们的:
+
+- 标识 – 是不同的。
+- 状态 – 是不同的。
+- 行为 – 是相同的。
+- 因此，设计和界定一个类，应该以其行为作为区分。
+
+
+
+#### 从“契约”的角度来看LSP
+
+LSP要求，凡是使用基类的地方，一定也适用于其子类。
+
+从Java语法角度看，意味着:
+
+- 子类一定得拥有基类的整个接口。
+- 子类的访问控制不能比基类更严格。
+  - 例如，Object类中有一个方法:
+    - protected Object clone();
+  - 子类中可以覆盖(override)之并放松其访问控制:
+    - public Object clone();
+  - 但反过来是不行的，例如:
+    - 覆盖public String tostring()方法，并将其访问控制缩小成private，编译器不可能允许这样的代码通过编译。
+
+从更广泛的意义来看，子类的“契约”不能比基类更“严格”
+
+- 例如，正方形长宽相等，这个契约比长方形要严格，因此正方形不是长方形的子类。
+- 例如，Properties的契约比 Hashtable更严格。
+
+
+
+#### 如何重构代码，以解决LSP问题?
+
+最简单的办法是，提取共性到基类:
 
 ![1609080300124](ArchitectureAdvanced.assets/1609080300124.png)
 
+
+
+#### 方法2 改成组合
+
 ![1609080307734](ArchitectureAdvanced.assets/1609080307734.png)
+
+
+
+#### 继承vs.组合
+
+继承和组合是OOP的两种扩展手段
+
+继承的优点:
+
+- 比较容易，因为基类的大部分功能可以通过继承直接进入子类。
+
+继承的缺点:
+
+- 继承破坏了封装，因为继承将基类更多的细节暴露给子类。因而继承被称为“白盒复用”。
+- 当基类发生改变时，可能会层层影响其下的子类。
+- 继承是静态的，无法在运行时改变组合。
+- 类数量的爆炸。
+
+应该优先使用组合
+
+
+
+#### 何时检测 LSP?
+
+一个模型，如果孤立地看，并不具有真正意义上的有效性。
+
+- 孤立地看，Rectangle和 Square并没有什么问题。
+
+通过它的客户程序才能体现出来
+
+- 从对基类做出合理假设的客户程序的角度来看，Rectangle和Square这个模型就是有问题
+  的。
+
+有谁知道设计的使用者会做出什么合理的假设呢?
+
+- 大多数这样的假设都很难预测。
+- 避免“过于复杂”或“过度设计”。
+- 只预测明显的违反LSP的情况，而推迟其它的预测。
+
+
+
+#### 可能违反LSP的征兆
+
+- 派生类中的退化函数
+
+```java
+public class Base {
+    public void func(){
+        /*
+        * do something.
+        * */
+    }
+}
+
+public class Derived extends Base{
+    @Override
+    public void func() {
+        // .....
+    }
+}
+```
+
+- 派生类中抛出基类不会产生的异常
+
+```java
+public class Derived extends Base {
+    @Override
+    public void func() {
+        throw new UnsupportedOperationException();
+    }
+}
+```
+
+
+
+### OOD原则四：单一职责原则(SRP)
+
+SRP - Single Responsibility Principle
+
+- 又被称为“内聚性原则(Cohesion) ”，意为:
+  - 一个模块的组成元素之间的功能相关性。
+- 将它与引起一个模块改变的作用力相联，就形成了如下描述:
+  - 一个类，只能有一个引起它的变化的原因。
+
+什么是职责?
+
+- 单纯谈论职责，每个人都会得出不同的结论
+- 因此我们下一个定义∶
+  -  一个职责是一个变化的原因。
+
+
+
+#### 违反 SRP原则的后果
+
+举例说明:
+
+- Rectangle类包含了两个职责:
+  - draw()在GUI上画出自己;
+  - area()用来计算自身的面积。
+- 有两个应用分别依赖Rectangle:
+  - 计算几何应用，利用Rectangle计算面积。
+  - 图形应用，利用Rectangle绘制长方形，也需要计算面积。
 
 ![1609080318727](ArchitectureAdvanced.assets/1609080318727.png)
 
-
+- 后果
+  - 脆弱性 – 把绘图和计算功能耦合在一起，当修改其中一个时，另一个功能可能会意外受损。
+  - 不可移植性 – 计算几何应用只需要使用“计算面积”的功能，却不得不包含GUI的依赖。
+- 改进
 
 ![1609080328432](ArchitectureAdvanced.assets/1609080328432.png)
 
+
+
+#### 区分类的方法：分清职责
+
+职责 – 变化的原因
+
+- 有时区分一个类包含了几个职责并不明显，例如:
+
+  - ```java
+    interface Modem{
+        void dial(String pno);
+        void hangup();
+        
+        void send(char c);
+        void recv();
+    }
+    ```
+
+- 假如应用程序连接Modem的方式会发生变化，例如: dial的参数会因此而变化，那么这个设
+  计会导致“僵化性”的问题。此时，应该把连接和收发这两个职责分离:
+
+何时分离职责?当变化发生时。
+
 ![1609080341454](ArchitectureAdvanced.assets/1609080341454.png)
+
+
+
+#### 一种常见的违反 SRP 情形
+
+Employee包含了两个职责:
+
+- 业务逻辑
+- 持久化逻辑
+
+这两个职责通常不应该混合在一起:
+
+- 业务变化快，持久化逻辑变化慢
+- 变化的原因也不同
 
 ![1609080351501](ArchitectureAdvanced.assets/1609080351501.png)
 
 
 
-![1609080364486](ArchitectureAdvanced.assets/1609080364486.png)
+### OOD原则五：接口分离原则（ISP)
+
+ISP - Interface Segregation Principle
+
+- 不应该强迫客户程序依赖它们不需要的方法。
+
+ISP和 SRP的关系
+
+- ISP和 SRP是相关的，都和“内聚性”有关。
+- SRP指出应该如何设计一个类 -- 只能有一种原因才能促使类发生改变。
+- ISP指出应该如何设计一个接口 -- 从客户的需要出发，强调不要让客户看到他们不需要的方法。
+
+
+
+#### 以前面Modem为例
+
+事实上，要完全做到SRP是困难的，例如在Modem例子中，“连接”环节和“收发数据”环节有内在的关系，可能必须写在一个类中。
+
+但是我们仍然可以把接口分开，这样当“连接”的方法改变时，那些只关心“收发数据”的程序不会受到影响。
+
+![1609080341454](ArchitectureAdvanced.assets/1609080341454.png)
+
+
+
+#### 胖接口 - 另一个例子
+
+这是一个可定时关闭的门。
+
+在这个例子中，Door类的接口中包含了timeout方法，然而这个方法对不需要timeout机制的门是没有用的。
+
+```java
+    interface TimerClient {
+        void timeout();
+    }
+
+    interface Door extends TimerClient {
+        void lock();
+
+        void unlock();
+
+        boolean isDoorOpen();
+    }
+
+    class Timer {
+        void register(int timeout, TimerClient client) {
+            // ....
+        }
+    }
+```
+
+
+
+#### 客户对接口的反作用
+
+Timer是 Door的客户;另外还有一些不需要定时功能的Door客户。
+
+当Timer 发生改变时:
+
+```java
+    class Timer {
+        public void register(int timeout, int timeoutID, TimerClient client) {
+            // ....
+        }
+    }
+```
+
+TimerClient 也被迫改变:
+
+```java
+    interface TimerClient {
+        void timeout(int timeoutID);
+    }
+```
+
+从而所有不需要定时功能的Door的客户程序都受到影响。
+
+
+
+#### 改进：分离 Door 接口和 TimerClient 接口
+
+- 适配器 方式（Adapter）
 
 ![1609080377066](ArchitectureAdvanced.assets/1609080377066.png)
+
+
+
+- 多继承 方法
 
 ![1609080387163](ArchitectureAdvanced.assets/1609080387163.png)
 
 
 
+#### 一个案例
+
+- reBuild 方法，在所有的缓存中，不是必须要的方法，需要分离
+
 ![1609080395985](ArchitectureAdvanced.assets/1609080395985.png)
 
 
 
+### 推荐阅读
+
 ![1609080405548](ArchitectureAdvanced.assets/1609080405548.png)
+
+
+
+
+
+## 案例：反应式编程框架 Flower 的设计
 
 ![1609080423706](ArchitectureAdvanced.assets/1609080423706.png)
 
@@ -2509,6 +3062,8 @@ OCP - Open/Closed Principle
 ![1609080524832](ArchitectureAdvanced.assets/1609080524832.png)
 
 ![1609080538730](ArchitectureAdvanced.assets/1609080538730.png)
+
+
 
 
 
