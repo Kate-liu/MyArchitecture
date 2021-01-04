@@ -3042,6 +3042,9 @@ TimerClient 也被迫改变:
 - 请描述什么是依赖倒置原则，为什么有时候依赖倒置原则又被称为好莱坞原则？
 - 请描述一个你熟悉的框架，是如何实现依赖倒置原则的。
 - 请用接口隔离原则优化 Cache 类的设计，画出优化后的类图。
+  - 将 Cache 中的 reBuild() 方法单另提出来，实现一个类 CacheManaged
+  - 将两个类：Cache  和 CacheManaged 分别继承 BazzCache
+  - 详细内容参见：
 
 ![1609080395985](ArchitectureAdvanced.assets/1609080395985.png)
 
@@ -3137,13 +3140,13 @@ Flower 与 WebFlux、RxJava的比较优势
 
 ## 面向对象的设计模式
 
+### 设计模式的作用
 
 
 
 
 
-
-
+## JUnit 中的设计模式
 
 
 
