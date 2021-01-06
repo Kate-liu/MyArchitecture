@@ -3949,6 +3949,12 @@ public class AllTests {
 
 
 
+#### 从组合设计模式看Go语⾔的多态特性
+
+
+
+
+
 
 
 ### 装饰器模式（Decorator）
@@ -4167,7 +4173,7 @@ public class DecoratorMain {
 
 
 
-# Spring 中的设计模式
+## Spring 中的设计模式
 
 ### 依赖注入 DI 与控制反转 IoC
 
@@ -4176,6 +4182,239 @@ public class DecoratorMain {
 
 
 ### Spring DI 示例
+
+```java
+public class Client {
+    private UserService userService;
+
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+}
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="userService" class="org.copydays.rmliu.UserDaoImpl">
+        <property name="userDao" ref="userDao"/>
+    </bean>
+
+    <bean id="client" class="org.copydays.rmliu.Client">
+        <property name="userService" ref="userService"/>
+    </bean>
+
+</beans>
+```
+
+
+
+### Spring DI 示例-xm解析流程
+
+- org.springframework.beans.factory.xml.BeanDefinitionParserDelegate#parseBeanDefinitionElement(org.w3c.dom.Element, org.springframework.beans.factory.config.BeanDefinition)
+
+```java
+private static void parseBeanElement(Element beanElement) throws Exception {
+    String id = beanElement.getAttribute("id");
+    String clsName = beanElement.getAttribute("class");
+
+    // 获取 class 对象
+    Class<?> cls = Class.forName(clsName);
+    // 直接调用无参构造函数，实例化一个对象
+    Object beanObj = cls.getDeclaredConstructor().newInstance();
+
+    beanMap.put(id, beanObj);  // 使用 map 存储所有的beans
+
+    // 获取属性结点，并调用 setter 方法设置属性
+    List<Element> subElemList = beanElement.elements();
+
+    for (Element subElem : subElemList) {
+        // 获取属性名称
+        String name = subElem.getAttribute("name");
+        // 获取属性值
+        String ref = subElem.getAttribute("ref");
+
+        Object refObj = beanMap.get(ref);
+        // 根据属性名称构造 setter 方法名：set + 属性首字母大写 + 属性其他字符，例：setUserDao
+        String methodName = "set" + (char) (name.charAt(0) - 32) + name.substring(1);
+        // 获取Method 对象
+        Method method = cls.getDeclaredMethod(methodName, refObj.getClass().getInterfaces()[0]);
+        // 调用setter 方法，设置对象属性
+        method.invoke(beanObj, refObj);
+    }
+}
+```
+
+
+
+### Spring 中的单例模式
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import static sun.tools.jconsole.inspector.XObject.NULL_OBJECT;
+
+public class SingletonDemo {
+    private final Map singletonObjects = new HashMap();
+
+    protected Object getSingleton(String beanName) {
+        Object singletinObjet = this.singletonObjects.get(beanName); // 检查缓存中是否存在实例
+
+        if (singletinObjet == null) {
+            synchronized (this.singletonObjects) {  // 如果为空，则锁定全局变量并进行处理
+                singletinObjet = singletonFactory.getObjet(); // 调用工厂的 getObject 方法
+                this.earlySingletonObjects.put(beanName, singletinObjet); // 纪录在缓存中
+            }
+        }
+        return (singletinObjet != NULL_OBJECT ? singletinObjet : null);
+    }
+}
+```
+
+
+
+### Spring MVC 模式
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping("/user/")
+public class QueryUserController extends FlowerController {
+
+    @Autowired
+    OrderNoService orderNoService;
+
+    @RequestMapping(value = "query")
+    public void hello(String userid) {
+        logger.info("收到请求： {}", userid);
+        doProcess(userid);
+    }
+
+    public boolean handler(ServletRequest req, ServlertResponse res) {
+        String uri = ((HttpServletRequest) req).getRequestURI();
+
+        Object[] parameters = new Object[args.length];
+
+        for (int i = 0; i < args.length; i++) {
+            parameters[i] = req.getParameter(args[i]);
+        }
+
+        Object ctl = controller.newInstance(uri);
+        Object response = method.invoke(ctl, parameters);
+        res.getWriter().println(response.toString());
+
+        return true;
+    }
+}
+```
+
+
+
+## Panthera 代码解析
+
+- link: https://github.com/zhihuili/project-panthera-ase
+
+阅读步骤
+
+- 打开SQL代码页：https://github.com/zhihuili/project-panthera-ase/tree/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql
+
+- 点击文件 SqlASTTranslator.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/SqlASTTranslator.java
+
+  - 重点代码：
+
+  - ```java
+    // ...    
+    if (transformer == null) {
+      transformer = TransformerBuilder.buildTransformer();
+    }
+    transformer.transformAST(sqlASTRoot, context);
+    
+    // ...
+    HiveASTGenerator generator = GeneratorFactory.getGenerator(sqlASTRoot);
+    ASTNode hiveTopNode = new ASTNode();
+    
+    // long b = System.currentTimeMillis();
+    // for (int i = 0; i < 1000; i++) {
+    generator.generateHiveAST(hiveTopNode, sqlASTRoot, hiveTopNode, sqlASTRoot, context);
+    // }
+    // long e = System.currentTimeMillis();
+    // System.out.println("--------"+(e-b));
+    
+    ret = (ASTNode) hiveTopNode.getChild(0);
+    
+    // ...
+    ```
+
+- 进入文件夹 transformer
+
+  - https://github.com/zhihuili/project-panthera-ase/tree/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/transformer
+  - 看到的全部是 各种转换器
+
+- 进入文件 TransformerBuilder.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/transformer/TransformerBuilder.java
+  - 可以看到，这个 TransformerBuilder.java ，使用了装饰器模式，一个包一个，直接变成了大粽子
+
+- 进入文件 SqlASTTransformer.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/transformer/SqlASTTransformer.java
+  - 可以看到，这个 SqlASTTransformer.java，是一个sql 抽象语法树 转换器 接口
+
+- 进入文件 UnionTransformer.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/transformer/UnionTransformer.java
+  - 可以看到，UnionTransformer.java 内部，使用组合模式，使用 SqlASTTransformer tf; 作为一个注入对象
+
+- 进入文件夹 generator
+
+  - https://github.com/zhihuili/project-panthera-ase/tree/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/generator
+  - 可以看到，generator 全部是 生成器
+
+- 进入文件 BaseHiveASTGenerator.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/generator/BaseHiveASTGenerator.java
+  - 内部实现了，HiveASTGenerator 接口，
+    - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/generator/HiveASTGenerator.java
+  - generateHiveAST()方法 实现，在动态语法树中，对 Hive 的查询语句转换
+
+- 进入文件 LikeGenerator.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/generator/LikeGenerator.java
+  - 实现 like 语法的 转换
+  - 并且，继承了 BaseHiveASTGenerator，继承父类的 baseProcess() 方法
+
+- 进入文件 HavingGenerator.java
+
+  - https://github.com/zhihuili/project-panthera-ase/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/sql/generator/HavingGenerator.java
+  - 实现 have 语法的转换
+  - 并且，使用装饰器模式。覆写与继承了 BaseHiveASTGenerator，继承父类的 generate() 方法
+
+- 至此，整个实现思路就很明确了，
+
+  - 通过将 SQL 语句 通过每一个 关键组，在抽象语法树中进行解析，替换为转换后的关键字与语法
+
+
+
+
+
+
+
+
 
 
 
