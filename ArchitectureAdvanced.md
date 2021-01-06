@@ -3191,7 +3191,7 @@ Flower 与 WebFlux、RxJava的比较优势
 
 ### 排序问题 - 如何创建一个对象？
 
-
+![1609902897235](ArchitectureAdvanced.assets/1609902897235.png)
 
 
 
@@ -3199,7 +3199,7 @@ Flower 与 WebFlux、RxJava的比较优势
 
 #### 利用简单工厂
 
-
+![1609902947219](ArchitectureAdvanced.assets/1609902947219.png)
 
 
 
@@ -3447,7 +3447,7 @@ public class Singleton2 {
 - 类的适配器
 - 对象的适配器
 
-
+![1609905941988](ArchitectureAdvanced.assets/1609905941988.png)
 
 
 
@@ -3638,11 +3638,15 @@ public abstract class TestCase extends Assert implements Test {
 
 #### 在 Eclipse 中运行测试的结果
 
+![1609911613635](ArchitectureAdvanced.assets/1609911613635.png)
+
 
 
 #### JUint 单元测试的执行
 
+![1609911654673](ArchitectureAdvanced.assets/1609911654673.png)
 
+​                       
 
 ### 模板方法模式（Template Method）
 
@@ -3683,7 +3687,7 @@ public abstract class TestCase extends Assert implements Test {
 - init()  属于初始化模板方法
 - service() 中的模板，属于处理不同请求方式的模板
 
-
+![1609912219433](ArchitectureAdvanced.assets/1609912219433.png)
 
 
 
@@ -3697,7 +3701,7 @@ public abstract class TestCase extends Assert implements Test {
 
 它是通过组合的方式来实现扩展
 
-
+![1609913540951](ArchitectureAdvanced.assets/1609913540951.png)
 
 
 
@@ -3719,7 +3723,7 @@ public abstract class TestCase extends Assert implements Test {
 
 - 何时请求调用什么方法，是不知道的
 
-
+![1609913850692](ArchitectureAdvanced.assets/1609913850692.png)
 
 
 
@@ -3825,7 +3829,7 @@ public class ListSortableTests extends SortableTests {
 
 #### 测试排序程序
 
-
+![1609913404231](ArchitectureAdvanced.assets/1609913404231.png)
 
 
 
@@ -3838,7 +3842,7 @@ public class ListSortableTests extends SortableTests {
 - 组合模式
   - 是一种 对象的结构模式
 
-
+![1609915093623](ArchitectureAdvanced.assets/1609915093623.png)
 
 
 
@@ -3847,7 +3851,7 @@ public class ListSortableTests extends SortableTests {
 - 文件系统
 - AWT控件
 
-
+![1609915168427](ArchitectureAdvanced.assets/1609915168427.png)
 
 
 
@@ -3919,7 +3923,7 @@ public class IntegerComparatorTests extends ComparatorTests<Integer> {
 
 - 上述代码生成一个 测试包
 
-
+![1609914650830](ArchitectureAdvanced.assets/1609914650830.png)
 
 
 
@@ -3946,6 +3950,8 @@ public class AllTests {
     }
 }
 ```
+
+![1609915000001](ArchitectureAdvanced.assets/1609915000001.png)
 
 
 
@@ -4060,6 +4066,8 @@ public class TestDecorator extends Assert implements Test {
 - 扩展现有对象的功能
 - 思考 PerformanceTests 的客户端是指谁？
 
+![1609916819608](ArchitectureAdvanced.assets/1609916819608.png)
+
 
 
 #### 装饰器模式示例
@@ -4133,6 +4141,8 @@ public class DecoratorMain {
 - 适配器也被称作 包装器，区别在于适配器是转换成另一个接口，而装饰器是保持接口不变
 - 包装器形成一条 链
 
+![1609917888172](ArchitectureAdvanced.assets/1609917888172.png)
+
 
 
 #### 装饰器的优缺点
@@ -4177,7 +4187,7 @@ public class DecoratorMain {
 
 ### 依赖注入 DI 与控制反转 IoC
 
-
+![1609918467379](ArchitectureAdvanced.assets/1609918467379.png)
 
 
 
@@ -4281,6 +4291,8 @@ public class SingletonDemo {
 
 
 ### Spring MVC 模式
+
+![1609927545573](ArchitectureAdvanced.assets/1609927545573.png)
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -4410,7 +4422,7 @@ public class QueryUserController extends FlowerController {
 
 
 
-
+## 高并发系统的历史
 
 
 
