@@ -3138,7 +3138,7 @@ Flower 与 WebFlux、RxJava的比较优势
 
 
 
-# 面向对象的设计模式
+## 面向对象的设计模式
 
 ### 设计模式的作用
 
@@ -3456,7 +3456,28 @@ public class Singleton2 {
 - 这是一个类的适配器
 - 由于原 Sortable 接口 和 ArrayList 不兼容，治好定义一个 newSortable
 
+```java
+public class SortableList<T> extends ArrayList<T> implements NewSortable<T> {
+    
+    @Override
+    public T getElement(int i) {
+        return get(i);
+    }
 
+    @Override
+    public void setElement(int i, T o) {
+        set(i, o);
+    }
+}
+
+public interface NewSortable<T> {
+    int size();
+
+    T getElement(int i);
+
+    void setElement(int i, T o);
+}
+```
 
 
 
@@ -3464,11 +3485,701 @@ public class Singleton2 {
 
 - 这是一个对象的适配器
 
+```java
+import java.util.List;
 
+public class ListSortable<T> implements NewSortable<T> {
+
+    private final List<T> list;
+
+    public ListSortable(List<T> list) {
+        this.list = list;
+    }
+
+    @Override
+    public int size() {
+        return list.size();
+    }
+
+    @Override
+    public T getElement(int i) {
+        return list.get(i);
+    }
+
+    @Override
+    public void setElement(int i, T o) {
+        list.set(i, o);
+    }
+}
+
+public interface NewSortable<T> {
+    int size();
+
+    T getElement(int i);
+
+    void setElement(int i, T o);
+}
+```
 
 
 
 #### 适配器的作用
+
+系统需要使用现有的类，而这个类的接口与我们所需要的不同
+
+- 例如：我们需要对 List 进行排序，但是我们需要一个 Sortable 接口，原有的 List 接口不能满足要求。
+
+
+
+#### 适配器的应用
+
+- Buton 类的适配器模式版本
+
+![1609080148058](ArchitectureAdvanced.assets/1609080148058.png)
+
+JDBC Driver
+
+- 是对具体数据库的适配器
+- 例如，将Oracle 适配到 JDBC 中
+
+JDBC-ODBC Bridge
+
+- 是将 Windows ODBC 适配到 JDBC 接口中
+
+
+
+
+
+### JUnit 中的设计模式
+
+#### 如何写单元测试
+
+```java
+import junit.framework.TestCase;
+import junit.runner.Sorter;
+
+import java.util.Comparator;
+
+public class BubbleSorterTests extends TestCase {
+    private Integer[] array;
+    private Sorter sorter;
+
+    @Override
+    protected void setUp() {
+        array = new Integer[]{5, 4, 9, 7, 6, 3, 8, 1, 0, 2};
+        sorter = new BubbleSorter();
+    }
+
+    public void testSort() {
+        Sortable sortable = new ArraySortable(array);
+        Comparator comparator = new IntegerComparator();
+
+        sorter.sort(sortable, comparator);
+
+        for (int i = 0; i < 10; i++) {
+            assertEquals(i, array[i].intValue());
+        }
+    }
+}
+```
+
+
+
+#### 实现一个单元测试的步骤
+
+- 创建测试类，从TestCase 派生
+- 初始化
+  - 覆盖基类的方法： Protected void setUp()
+- 清除环境
+  - 覆盖基类的方法：Protected void tearDown()
+- 书写测试方法
+  - 命名规则：public void testXyz()
+
+
+
+
+
+#### JUint 单元测试是如何执行的？
+
+```java
+public abstract class TestCase extends Assert implements Test {
+  
+    public void runBare() throws Throwable {
+      Throwable exception= null;
+      setUp();
+      try {
+        runTest();
+      } catch (Throwable running) {
+        exception= running;
+      }
+      finally {
+        try {
+          tearDown();
+        } catch (Throwable tearingDown) {
+          if (exception == null) exception= tearingDown;
+        }
+      }
+      if (exception != null) throw exception;
+    }
+  
+  	protected void runTest() throws Throwable {
+      // 利用动态机制调用 testXyz()
+		}
+  
+    protected void setUp() throws Exception {
+    }
+
+    protected void tearDown() throws Exception {
+    }
+}
+```
+
+
+
+#### 在 Eclipse 中运行测试的结果
+
+
+
+#### JUint 单元测试的执行
+
+
+
+### 模板方法模式（Template Method）
+
+模板方法模式是扩展功能的最基本模式之一
+
+- 它是一种 类的行为模式
+
+它通过继承的方法来实现扩展
+
+- 基类负责算法的轮廓和骨架
+- 子类负责算法的具体实现
+
+组合 vs. 继承
+
+- 基于 继承 的模板方法比组合更容易实现
+- 在很多情况下，可以适当使用这种模式
+
+
+
+#### 模板方法的形式
+
+- 抽象方法
+  - protected abstract void step1();
+  - 轻质子类实现该步骤
+- 具体方法
+  - protected void doSomething(){ ... }
+  - 子类不需要覆盖，但也可以覆盖之
+  - 如果想明确告诉子类 不要覆盖它，最好标明 final
+- 钩子方法
+  - protected void setUp(){}
+  - 空的实现（缺省适配器模式）
+  - 子类可选择性的覆盖之，以便在特定的时机做些事
+
+
+
+#### Java Servlet 中的模板方法
+
+- init()  属于初始化模板方法
+- service() 中的模板，属于处理不同请求方式的模板
+
+
+
+
+
+
+
+### 策略模式（Strategy）
+
+策略模式是扩展功能的另一种最基本的模式
+
+- 他是一种 对象的行为模式
+
+它是通过组合的方式来实现扩展
+
+
+
+
+
+#### 什么时候使用策略模式？
+
+- 系统需要在多种算法中选择一个的时候
+- 重构系统时，
+  - 将条件语句转换成对于策略的多态性调用
+- 策略模式的优点（对比模板方法）
+  - 将使用策略的人与策略的具体实现分离
+  - 策略对象可以自由组合
+- 策略模式可能存在的问题
+  - 策略模式仅仅封装了 算法的具体实现，方便添加和替换算法
+  - 但它并不关心何时使用何种算反，这个必须要游客户端来决定
+
+
+
+#### 策略模式和模板方法的结合
+
+- 何时请求调用什么方法，是不知道的
+
+
+
+
+
+#### 测试 Sortable
+
+```java
+import junit.framework.TestCase;
+
+public abstract class SortableTests extends TestCase {
+    protected Sortable<Integer> sortable;
+
+    @Override
+    protected void setUp() throws Exception {
+        Integer[] data = new Integer[10];
+
+        for (int i = 0; i < 10; i++) {
+            data[i] = i;
+        }
+
+        sortable = createSortable(data);
+
+    }
+
+    protected abstract Sortable<Integer> createSortable(Integer[] data);
+
+    public final void testGet() {
+        for (int i = 0; i < 10; i++) {
+            assertEquals(i, sortable.get(i).intValue());
+        }
+
+        try {
+            sortable.get(-1);
+            fail();
+        } catch (RuntimeException e) {
+
+        }
+        try {
+            sortable.get(10);
+            fail();
+        } catch (RuntimeException e) {
+
+        }
+    }
+
+    public final void testSet() {
+        for (int i = 0; i < 10; i++) {
+            sortable.set(i, 100);
+            assertEquals(100, sortable.get(i).intValue());
+        }
+
+        try {
+            sortable.set(-1, 999);
+            fail();
+        } catch (RuntimeException e) {
+
+        }
+        try {
+            sortable.set(10, 999);
+            fail();
+        } catch (RuntimeException e) {
+
+        }
+    }
+
+    public final void testSize() {
+        assertEquals(10, sortable.size());
+    }
+}
+```
+
+
+
+#### 测试 ArraySortable
+
+```java
+import java.lang.reflect.Array;
+import java.util.List;
+
+public class ArraySortableTests extends SortableTests {
+
+    @Override
+    protected Sortable<Integer> createSortable(Integer[] data) {
+        List<Integer> list = Array.asList(data);
+        return new ListSortable<Integer>(list);
+    }
+}
+```
+
+
+
+#### 测试 ListSortable
+
+```java
+public class ListSortableTests extends SortableTests {
+    @Override
+    protected Sortable<Integer> createSortable(Integer[] data) {
+        return new ArraySortableTests<Integer>(data);
+    }
+}
+```
+
+
+
+#### 测试排序程序
+
+
+
+
+
+
+
+
+
+### 组合模式（Composite）
+
+- 组合模式
+  - 是一种 对象的结构模式
+
+
+
+
+
+#### 组合模式的应用
+
+- 文件系统
+- AWT控件
+
+
+
+
+
+#### 参数化的单元测试
+
+```java
+import junit.framework.TestCase;
+
+import java.util.Comparator;
+
+public abstract class ComparatorTests<T> extends TestCase {
+    protected T o1;
+    protected T o2;
+    protected boolean ascending;
+    protected boolean isBefore;
+
+    public ComparatorTests(T o1, T o2, boolean ascending, boolean isBefore) {
+        super("testIsBefore");
+
+        this.o1 = o1;
+        this.o2 = o2;
+        this.ascending = ascending;
+        this.isBefore = isBefore;
+    }
+
+    public void testIsBefore() {
+        assertEquals(isBefore, createComparator(ascending).isBefore(o1, o2));
+    }
+
+    protected abstract Comparator<T> createComparator(boolean ascending);
+
+}
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import java.util.Comparator;
+
+public class IntegerComparatorTests extends ComparatorTests<Integer> {
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite("IntegerComparatorTests");
+
+        suite.addTest(new IntegerComparatorTests(1, 1, true, false));
+        suite.addTest(new IntegerComparatorTests(1, 2, true, true));
+        suite.addTest(new IntegerComparatorTests(2, 1, true, false));
+
+        suite.addTest(new IntegerComparatorTests(1, 1, false, false));
+        suite.addTest(new IntegerComparatorTests(1, 2, false, false));
+        suite.addTest(new IntegerComparatorTests(2, 1, false, true));
+
+        return suite;
+    }
+
+    public IntegerComparatorTests(Integer o1, Integer o2, boolean ascending, boolean isBefore) {
+        super(o1, o2, ascending, isBefore);
+    }
+
+    @Override
+    protected Comparator<Integer> createComparator(boolean ascending) {
+        return new IntegerCoparator(ascending);
+    }
+}
+```
+
+
+
+#### 测试包（Test Suite）
+
+- 上述代码生成一个 测试包
+
+
+
+
+
+#### 生成更复杂的测试包
+
+```java
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+public class AllTests {
+    public static Test suite() {
+        TestSuite suite = new TestSuite("sort");
+
+        suite.addTestSuite(BubbleSorterTests.class);
+        suite.addTestSuite(InsertionSorterTests.class);
+
+        suite.addTestSuite(ArraySortableTests.class);
+        suite.addTestSuite(ListSortableTests.class);
+
+        suite.addTest(IntegerComparatorTests.suite());
+        suite.addTest(ComparableComparatorTests.suite());
+
+        return suite;
+    }
+}
+```
+
+
+
+
+
+### 装饰器模式（Decorator）
+
+#### 测试排序程序的性能
+
+冒泡排序和插入排序，谁更快？
+
+- 这种测试必须重复多次（如10000次），才能比较准确的计算出性能
+- 如何让 BubbleSorterTests 和 InsertionSorterTests 重复运行多次，而不需要修改他们的代码？
+- 如何计算时间？
+
+运用 JUnit 扩展包中的辅助类：
+
+- junit.extensions.TestSetup
+- Junit.extensions.RepeatedSetup
+
+
+
+#### 性能测试程序
+
+```java
+import junit.extensions.RepeatedTest;
+import junit.extensions.TestSetup;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import org.copydays.rmliu.JUnit.BubbleSorterTests;
+
+public class PerformanceTests extends TestSetup {
+
+    private long start;
+    private int repeat;
+
+    public PerformanceTests(Test test, int repeat) {
+        super(new RepeatedTest(test, repeat));
+
+        this.repeat = repeat;
+    }
+
+    protected void setUp() {
+        start = System.currentTimeMillis();
+    }
+
+    protected void tearDown() {
+        long duration = System.currentTimeMillis() - start;
+
+        System.out.printf("%s repeated , %d times, takes %d ms \n", getTest(), repeat, duration);
+    }
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite("performance");
+
+        Test bubbleTests = new TestSuite(BubbleSorterTests.class);
+        Test insertionTests = new TestSuite(InsertionSorterTests.class);
+
+        suite.addTest(new PerformanceTests(bubbleTests, 10000));
+        suite.addTest(new PerformanceTests(insertionTests, 10000));
+
+        return suite;
+    }
+}
+
+import junit.framework.Assert;
+import junit.framework.Test;
+import junit.framework.TestResult;
+
+public class TestDecorator extends Assert implements Test {
+
+    protected Test fTest;
+
+    public TestDecorator(Test fTest) {
+        this.fTest = fTest;
+    }
+
+    @Override
+    public int countTestCases() {
+        return 0;
+    }
+
+    @Override
+    public void run(TestResult result) {
+        for (int i = 0; i < fTimesRepeat; i++) {
+            if (result.shouldStop()) {
+                beak;
+            }
+            super.run(result);
+        }
+    }
+}
+```
+
+
+
+#### 装饰器模式（Decorator）
+
+装饰器模式
+
+- 是一种 对象的结构模式
+
+装饰器的作用
+
+- 在不改变对客户端的接口的前提下（对客户端透明）
+- 扩展现有对象的功能
+- 思考 PerformanceTests 的客户端是指谁？
+
+
+
+#### 装饰器模式示例
+
+```java
+public interface AnyThing {
+    void exe();
+}
+
+public class Dream implements AnyThing {
+    private AnyThing a;
+
+    public Dream(AnyThing a) {
+        this.a = a;
+    }
+
+    @Override
+    public void exe() {
+        System.out.print("梦装饰了");
+        a.exe();
+    }
+}
+
+public class Moon implements AnyThing {
+
+    private AnyThing a;
+
+    public Moon(AnyThing a) {
+        this.a = a;
+    }
+
+    @Override
+    public void exe() {
+        System.out.print("明月装饰了");
+        a.exe();
+    }
+}
+
+public class You implements AnyThing{
+    private AnyThing a;
+
+    public You(AnyThing a) {
+        this.a = a;
+    }
+
+    @Override
+    public void exe() {
+        System.out.print("你\n");
+    }
+}
+
+public class DecoratorMain {
+    public static void main(String[] args) {
+        AnyThing t1 = new Moon(new Dream(new You(null)));
+        t1.exe();
+//        明月装饰了梦装饰了你
+
+        AnyThing t2 = new Dream(new Moon(new You(null)));
+        t2.exe();
+//        梦装饰了明月装饰了你
+    }
+}
+```
+
+
+
+#### 装饰器模式
+
+装饰器模式，也被笼统的称为 包装器（Wrapper）
+
+- 适配器也被称作 包装器，区别在于适配器是转换成另一个接口，而装饰器是保持接口不变
+- 包装器形成一条 链
+
+
+
+#### 装饰器的优缺点
+
+装饰器和模板方法、策略模式的比较
+
+- 装饰器保持对象的功能不变，扩展其外围的功能
+- 模板方法和策略模式则保持算法的框架不变，而扩展其内部的实现
+
+装饰器和继承的比较
+
+- 都可以用来扩展对象的功能
+- 但装饰器是动态的，继承是静态的
+- 装饰器可以任意组合
+  - 但这也使装饰器更复杂，有可能会组合出荒谬的结果
+
+
+
+
+
+#### 装饰器的应用
+
+- Java Servlet中的应用
+  - HttpServletRequest/HttpServletRequestWrapper
+  - HttpServletResponse/HttpServletResponseWrapper
+- 同步化装饰器
+  - Collections. synchronizedList（list）
+  - 取代原先的Vector、Hashtable等同步类。
+- Java I/O类库简介
+  - 核心-流，即数据的有序排列，将数据从源送达目的地。
+  - 流的种类
+    - InputStream、 OutputStream -代表byte流（八位字节流）
+    - Reader、Writer -代表char流（Unicode 字符流）
+  - 流的对称性
+    - 输入-输出对称
+    - Byte-Char对称
+    - 因此我们只要学习任意一种流，就可以基本了解其它所有的流。
+
+
+
+# Spring 中的设计模式
+
+### 依赖注入 DI 与控制反转 IoC
+
+
+
+
+
+### Spring DI 示例
+
+
+
+
 
 
 
