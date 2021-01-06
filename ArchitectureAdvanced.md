@@ -3138,47 +3138,337 @@ Flower 与 WebFlux、RxJava的比较优势
 
 
 
-## 面向对象的设计模式
+# 面向对象的设计模式
 
 ### 设计模式的作用
 
+- 应用程序
+- 框架
+- 设计模式
+  - 创建模式，结构模式，行为模式
+- OOD的原则
+  - OCP/DIP/LSP/SRP/ISP
+- OOD的目标
+- 强内聚，低耦合的程序
+
+
+
+### 设计模式的定义
+
+什么是设计模式？
+
+- 每一种模式都描述了一种问题的统一解决方案。这种问题在我们的环境中，不停地出现。
+- 设计模式是一种可重复使用的解决方案。
+
+一种设计模式的四个部分：
+
+- 模式的名称 - 由少量的字组成的名称，有助于我们表达我们的设计
+- 待解问题 - 描述了合适需要运用这种模式，以及运用模式的环境（上下文）
+- 解决方案 - 描述了组成设计的元素（类和对象），它们的关系，职责以及合作，但这种解决方案是抽象的，它不代表具体的实现
+- 结论 - 运用这种方案所带来的利与弊，主要是指它对系统的弹性，扩展性，和可移植性的影响
+
+
+
+### 设计模式的分类
+
+从功能分
+
+- 创建模式（Creational Patterns）
+  - 对类的实例化过程的抽象
+- 结构模式（Structural Patterns）
+  - 将类或者对象结合在一起形成更大的结构
+- 行为模式（Behavioral Patterns）
+  - 对在不同的对象中间划分责任和算法的抽象
+
+从方式分
+
+- 类模式
+  - 以继承的方式实现模式，静态的
+- 对象模式
+  - 以组合的方式实现模式，动态的
+
+
+
+### 排序问题 - 如何创建一个对象？
 
 
 
 
-## JUnit 中的设计模式
+
+### 利用简单工厂模式
+
+#### 利用简单工厂
 
 
 
 
 
+#### 简单工厂及Client 程序
+
+```java
+public class SorterFactory {
+    public static <T> Sorter<T> getSorter() {
+        return new BubbleSorter<T>();
+    }
+}
+
+public class Client {
+    public static void main(String[] args) {
+        Integer[] array = {5, 4, 9, 7, 6, 3, 8, 1, 0, 2};
+
+        Sorter<Integer> sorter = SorterFactory.getSorter();
+        Sortable<Integer> sortable = SorterableFactory.getSortable(array);
+
+        Comparator<Integer> comparator = ComparatorFactory.getComparator();
+
+        sorter.sort(sortable, comparator);
+        // ...
+
+    }
+}
+```
+
+
+
+#### 简单工厂的优缺点
+
+优点：
+
+- 使Client不再依赖Sorter的具体实现（如 BubbleSorter）
+- 对Client实现OCP - 增加 Sorter 不影响 Client
+
+缺点：
+
+- 对 Factory 未实现 OCP - 增加 Sorter 需要修改 Factory
+
+
+
+#### 对简单工厂的改进一
+
+```java
+public class SorterFactory_2 {
+    @SuppressWarnings("unchecked")
+    public static <T> Sorter<T> getSorter(String implClass) {
+        try {
+            Class impl = Class.forName(implClass);
+            return (Sorter<T>) impl.newInstance();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Illegal class name: " + implClass, e);
+        }
+    }
+}
+
+public class Client_2 {
+    public static void main(String[] args) {
+        Integer[] array = {5, 4, 9, 7, 6, 3, 8, 1, 0, 2};
+
+        Sorter<Integer> sorter = SorterFactory_2.getSorter("demo.sort.impl.BubbleSorter");
+        Sortable<Integer> sortable = SorterableFactory.getSortable(array);
+
+        Comparator<Integer> comparator = ComparatorFactory.getComparator();
+
+        sorter.sort(sortable, comparator);
+        // ...
+
+    }
+}
+```
+
+
+
+#### 改进一所存在的问题
+
+解决了Factory的OCP问题吗？
+
+- 增加 Sorter实现时，不需要修改Factory了
+- 但是仍然需要修改 Client
+
+其他问题
+
+- 丧失了编译时的类型安全
+  - Client 和 Factory 均类型不安全
+- Client 仍然知道 Sorter的实现是什么
+- 限制了 Sorter 的实现只能通过 默认构造函数 创建
+
+
+
+#### 对简单工厂的改进二
+
+```java
+import java.io.IOException;
+import java.util.Properties;
+
+public class SorterFactory_3 {
+    private final static Properties IMPLS = loadImpls();
+
+    private static Properties loadImpls() {
+        Properties defaultImpls = new Properties();
+        Properties impls = new Properties(defaultImpls);
+
+        defaultImpls.setProperty("sorter", "demo.sort.impl.BubbleSorter");
+
+        try {
+            impls.load(SorterFactory_3.class.getResourceAsStream("sort.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return impls;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Sorter<T> getSorter() {
+        String implClassName = IMPLS.getProperty("sorter");
+
+        try {
+            Class implClass = Class.forName(implClassName);
+
+            return (Sorter<T>) implClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Illegal class name: " + implClassName, e);
+        }
+    }
+}
+
+public class Client_3 {
+    public static void main(String[] args) {
+        Integer[] array = {5, 4, 9, 7, 6, 3, 8, 1, 0, 2};
+
+        Sorter<Integer> sorter = SorterFactory_3.getSorter();
+        Sortable<Integer> sortable = SorterableFactory.getSortable(array);
+
+        Comparator<Integer> comparator = ComparatorFactory.getComparator();
+
+        sorter.sort(sortable, comparator);
+        // ...
+
+    }
+}
+
+// 创建 sorter.properties 文件：
+sorter=demo.sort.impl.BubbleSorter
+```
+
+
+
+#### 改进二的优缺点
+
+优点：
+
+- 满足 OCP ？
+  - 对 Client 和 Factory 均满足
+  - 满足 OCP 方法
+    - 抽象
+    - 动态编程（即将编译时类型检查转变成运行时检查）
+
+缺点：
+
+- 缺少编译时类型安全
+- 限制了 Sorter 的实现，只能通过 默认构造函数 创建
+  - 假如需要传递参数？
+
+这种做法其实相当重要
+
+- 简单工厂非常重要，是许多其他模式的基础
+- 而该机制解决了简单工厂模式最致命的问题
+
+
+
+### Singleton 单例模式
+
+#### 为什么要使用
+
+Single 模式保证产生单一实例，就是说一个类只产生一个实例。
+
+使用Singleton 有两个原因：
+
+- 因为只有一个实例，可以减少实例频繁创建和销毁带来的资源消耗；
+- 当多个用户使用这个实例的时候，便于进行统一控制（比如打印机对象）
+
+前者是性能需求，后者是功能需求
+
+
+
+#### Singleton实现有两种方式
+
+- 方法一
+
+```java
+public class Singleton1 {
+    private Singleton1() {
+
+    }
+
+    private static Singleton1 instance = new Singleton1();
+
+    public static Singleton1 getInstance() {
+        return instance;
+    }
+
+}
+```
+
+- 方法二
+
+```java
+public class Singleton2 {
+    private Singleton2() {
+
+    }
+
+    private static Singleton2 instance = null;
+
+    public static synchronized Singleton2 getInstance() {
+        if (instance == null) {
+            instance = new Singleton2();
+        }
+        return instance;
+    }
+}
+```
 
 
 
 
 
+#### 说明
+
+- 一定要有私有的构造函数，保证类实例只能通过 getInstance() 方法获得。
+- 方法2中 getInstance 的修饰符 synchronized 一定要加上，否则可能会穿绳多重实例
+- 尽量使用方法1构造单例实例
+- 单例中的成员变量是多线程重用的，可能会产生意想不到的结果，因此尽量将单例设计为无状态对象（只提供服务，不保存状态）
 
 
 
 
 
+### 适配器模式（Adapter）
+
+- 类的适配器
+- 对象的适配器
 
 
 
 
 
+#### 代码示例 - 类的适配器
+
+- 这是一个类的适配器
+- 由于原 Sortable 接口 和 ArrayList 不兼容，治好定义一个 newSortable
 
 
 
 
 
+#### 代码示例 - 对象的适配器
+
+- 这是一个对象的适配器
 
 
 
 
 
-
-
+#### 适配器的作用
 
 
 
