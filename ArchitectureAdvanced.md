@@ -761,9 +761,11 @@
 
 
 
-## 架构方法： 架构师如何做架构 
+## 架构基础
 
-### 如何成为架构师？ 
+### 架构方法： 架构师如何做架构 
+
+#### 如何成为架构师？ 
 
 - JD（简历）
 - 架构师面试
@@ -782,7 +784,7 @@
 
 
 
-### 架构师面试题？
+#### 架构师面试题？
 
 - 面试题
 - 自我介绍；讲一个最有技术含量的项目，面对的难题，解决方案，关键技术，技术点，沟通表达，手绘流程图，手写代码能力。
@@ -895,7 +897,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 架构师的主要职责
+#### 架构师的主要职责
 
 - 编写架构设计文档（week1)
 - 开发编程框架（week2)
@@ -911,7 +913,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 架构师主要能力
+#### 架构师主要能力
 
 - 编程能力
 - 基础技术掌握能力
@@ -925,7 +927,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 什么是软件架构?
+#### 什么是软件架构?
 
 软件架构，是有关软件整体结构与组件的抽象描述，用于指导大型软件系统各个方面的设计。——维基百科
 
@@ -937,13 +939,13 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 关于软件开发的几个事实
+#### 关于软件开发的几个事实
 
 软件技术的进步使得程序员不需要了解技术细节和原理就能开发出能用的软件。让程序员关注更少的事情有助于提高软件开发效率和质量。
 
 
 
-### 什么是架构师?
+#### 什么是架构师?
 
 架构师是做架构设计、对系统架构负责的那个人。
 
@@ -951,7 +953,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 如何做软件架构
+#### 如何做软件架构
 
 - 编写架构设计文档（week1)
 - 开发编程框架（week2)
@@ -967,7 +969,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 大家关心的一些问题
+#### 大家关心的一些问题
 
 架构师与全栈工程师的区别是什么?两者之间是否有联系?
 
@@ -985,7 +987,7 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-### 如何通过训练营提高自己
+#### 如何通过训练营提高自己
 
 - 架构师训练营，而不是架构训练营。
   - 架构方法、架构模式、关键知识点可以训练，但是架构一定要实践，一定要关注场景。
@@ -996,9 +998,9 @@ link：https://blog.csdn.net/w1014074794/article/details/88403568
 
 
 
-## 4+1视图模型：软件开发的本质是什么？如何进行软件架构设计？ 
+### 4+1视图模型：软件开发的本质是什么？如何进行软件架构设计？ 
 
-### 4+1 架构视图
+#### 4+1 架构视图
 
 - 软件架构={元素，形式，关系/约束}
 - 单一的视图无法完整的表达架构，因此需要具备完整的视图集。
@@ -1564,9 +1566,9 @@ UML 中这种分组机制叫包（Package)。引入包是为了降低系统的�
 
 
 
-## 架构之美：如何遵循康威定律做出优秀架构？
+### 架构之美：如何遵循康威定律做出优秀架构？
 
-### 康威定律
+#### 康威定律
 
 设计系统的架构受限制于产生这些设计的组织的沟通结构。
 
@@ -1574,7 +1576,7 @@ UML 中这种分组机制叫包（Package)。引入包是为了降低系统的�
 
 
 
-### 第一定律
+#### 第一定律
 
 Communication dictates design。
 
@@ -1589,7 +1591,7 @@ Communication dictates design。
 
 
 
-### 第二定律
+#### 第二定律
 
 There is never enough time to do something right, but there is always enough time to do it over。
 
@@ -1603,7 +1605,7 @@ There is never enough time to do something right, but there is always enough tim
 
 
 
-### 第三定律
+#### 第三定律
 
 There is a homomorphism from the linear graph of a system to the linear graph of its design organization。
 
@@ -1617,7 +1619,7 @@ There is a homomorphism from the linear graph of a system to the linear graph of
 
 
 
-### 第四定律
+#### 第四定律
 
 The structures of large systems tend to disintegrate during development, qualitatively more so than with small systems。
 
@@ -1632,7 +1634,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 一个创业公司的技术团队组织结构变迁
+#### 一个创业公司的技术团队组织结构变迁
 
 ![1608629097528](ArchitectureAdvanced.assets/1608629097528.png)
 
@@ -1640,7 +1642,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### GPS
+#### GPS
 
 ![1608629128651](ArchitectureAdvanced.assets/1608629128651.png)
 
@@ -1650,15 +1652,15 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 都江堰
+#### 都江堰
 
 ![1608629192625](ArchitectureAdvanced.assets/1608629192625.png)
 
 
 
-## 形形色色的架构师
+### 形形色色的架构师
 
-### 按作用划分架构师
+#### 按作用划分架构师
 
 - 设计型架构师
   - 也就是一般意义上的架构师，负责系统架构设计，同时也要负责架构的实施落地、演化发展、推广重构。
@@ -1675,7 +1677,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 按效果划分架构师
+#### 按效果划分架构师
 
 - 夏尔巴人架构师
   - 夏尔巴人生活在喜马拉雅山麓，协助探险队或者登山爱好者攀登那些8000米以上被称为“生命的禁区”的雪山，帮助他们运送给养到突击队营地，以及作为向导带领登山队员登顶。每一次成功对于登山队员是一次自我的超越，而对于夏尔巴人，不过是完成了一个工作。
@@ -1688,7 +1690,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 按职责角色划分架构师
+#### 按职责角色划分架构师
 
 - 产品架构师
   - 负责具体互联网产品的技术架构。当产品业务规划确定后，产品架构师就要开始产品的架构设计了，和运营团队确定PV数、用户数、商品数等产品运营目标、发展规划、非功能指标;和产品经理确定功能需求、模块划分等功能目标;和项目经理确定各种开发资源。获得必要的信息后进行整体架构设计，参与项目开发。产品架构师一般会参与产品的整个生命周期。
@@ -1701,7 +1703,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 按关注层次划分架构师
+#### 按关注层次划分架构师
 
 - 只关注功能的架构师
   - 架构目标只是完成功能，通常，这不叫架构。
@@ -1717,7 +1719,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 按口碑划分架构师
+#### 按口碑划分架构师
 
 - 最好的架构师
   - 和团队相处日久，通常情况下团队成员感觉不出他的存在，貌似没有他工作也可以完成得很好，但是如果他真的离开了，大家就会觉得心里空荡荡，没了主心骨。
@@ -1732,7 +1734,7 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-### 非主流方式划分架构师
+#### 非主流方式划分架构师
 
 - 普通架构师
   - 从问题和需求出发，结合个人经验、组织资源、业界模式进行架构设计，中规中矩，能够切实可行地解决问题满足需求，是架构师中的普通青年。
@@ -1745,7 +1747,9 @@ The structures of large systems tend to disintegrate during development, qualita
 
 
 
-## 软件开发简史：你还在用面向对象编程语言写面向过程的代码吗？
+## 软件开发基础
+
+### 软件开发简史：你还在用面向对象编程语言写面向过程的代码吗？
 
 ### 莱布尼茨的奇思怪想
 
@@ -2148,7 +2152,7 @@ Gang of Four ,(Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides）提
 
 
 
-## 面向对象设计的基本原则
+## 软件设计原则
 
 ### UML 练习 2
 
@@ -3054,7 +3058,7 @@ TimerClient 也被迫改变:
 
 
 
-## 案例：反应式编程框架 Flower 的设计
+### 案例：反应式编程框架 Flower 的设计
 
 #### 程序是如何运行又是如何崩溃的
 
@@ -3138,9 +3142,11 @@ Flower 与 WebFlux、RxJava的比较优势
 
 
 
-## 面向对象的设计模式
+## 软件设计模式
 
-### 设计模式的作用
+### 面向对象的设计模式
+
+#### 设计模式的作用
 
 - 应用程序
 - 框架
@@ -3153,7 +3159,7 @@ Flower 与 WebFlux、RxJava的比较优势
 
 
 
-### 设计模式的定义
+#### 设计模式的定义
 
 什么是设计模式？
 
@@ -3169,7 +3175,7 @@ Flower 与 WebFlux、RxJava的比较优势
 
 
 
-### 设计模式的分类
+#### 设计模式的分类
 
 从功能分
 
@@ -4323,6 +4329,8 @@ public class DecoratorMain {
 
 ### 作业实践
 
+#### 作业题
+
 请用组合设计模式编写程序，打印输出图1的窗口，窗口组件的树结构如图2所示。
 
 打印输出示例参考图3。
@@ -4341,19 +4349,49 @@ public class DecoratorMain {
 
 
 
+#### 答案
+
+- [答案](DesignPatterns/src/main/java/org/copydays/rmliu/homework/Main.java)
+
+```java
+import org.copydays.rmliu.homework.component.*;
+
+public class Main {
+    public static void main(String[] args) {
+        WinForm winForm = new WinForm("Window 窗口");
+
+        winForm.addComponent(new PictureComponent("logo图片"));
+        winForm.addComponent(new ButtonComponent("登录"));
+        winForm.addComponent(new ButtonComponent("注册"));
+
+        Container frame = new FrameComponent("frame1");
+        frame.addComponent(new LableComponent("用户名"));
+        frame.addComponent(new TextBoxComponent("文本框"));
+        frame.addComponent(new LableComponent("密码"));
+        frame.addComponent(new PasswordBoxComponent("密码框"));
+        frame.addComponent(new CheckBoxComponent("复选框"));
+        frame.addComponent(new TextBoxComponent("记住用户名"));
+        frame.addComponent(new LinkLableComponent("记住密码"));
+        winForm.addComponent(frame);
+
+        winForm.print();
+    }
+}
+```
 
 
 
 
-## Spring 中的设计模式
 
-### 依赖注入 DI 与控制反转 IoC
+### Spring 中的设计模式
+
+#### 依赖注入 DI 与控制反转 IoC
 
 ![1609918467379](ArchitectureAdvanced.assets/1609918467379.png)
 
 
 
-### Spring DI 示例
+#### Spring DI 示例
 
 ```java
 public class Client {
@@ -4387,7 +4425,7 @@ public class Client {
 
 
 
-### Spring DI 示例-xm解析流程
+#### Spring DI 示例-xm解析流程
 
 - org.springframework.beans.factory.xml.BeanDefinitionParserDelegate#parseBeanDefinitionElement(org.w3c.dom.Element, org.springframework.beans.factory.config.BeanDefinition)
 
@@ -4425,7 +4463,7 @@ private static void parseBeanElement(Element beanElement) throws Exception {
 
 
 
-### Spring 中的单例模式
+#### Spring 中的单例模式
 
 ```java
 import java.util.HashMap;
@@ -4452,7 +4490,7 @@ public class SingletonDemo {
 
 
 
-### Spring MVC 模式
+#### Spring MVC 模式
 
 ![1609927545573](ArchitectureAdvanced.assets/1609927545573.png)
 
@@ -4497,10 +4535,10 @@ public class QueryUserController extends FlowerController {
 
 
 
-## Panthera 代码解析
+### Panthera 代码解析
 
 - link: https://github.com/zhihuili/project-panthera-ase
-- 初始实验动态语法树代码参见：[HiveASTGenerator.java](Data/HiveASTGenerator.java)
+- 初始实验动态语法树代码(几千行代码)参见：[HiveASTGenerator.java](Data/HiveASTGenerator.java)
 - 在Hadoop中实现标准SQL 运行的分享 PPT 参见，[Beyond Hive-Standard SQL on Hadoop.pdf](Data/Beyond Hive-Standard SQL on Hadoop.pdf)
 
 阅读步骤
@@ -4586,9 +4624,312 @@ public class QueryUserController extends FlowerController {
 
 
 
-## 高并发系统的历史
+## 互联网系统架构
+
+### 系统架构概述：互联网系统面临怎么样的挑战？
+
+#### 高并发，大流量
+
+需要面对高并发用户，大流量访问。
+
+- Google 日均 PV 数 35亿，日均 IP 访问数 3亿
+- 微信在线用户数 10亿
+- 天猫双十一活动一天交易额3000亿
 
 
+
+#### 高可用
+
+系统 7 x 24 小时不间断服务。
+
+大型互联网站的宕机事件通常会成为新闻焦点。
+
+
+
+#### 海量数据
+
+需要存储、管理海量数据。
+
+- Facebook 每周上传的照片数目接近10亿
+- 百度收录的网页数目有数百亿
+- Google 有近百万台服务器为全球用户提供服务（200万台左右）
+
+
+
+#### 用户分布广泛，网络情况复杂
+
+许多大型互联网都是为全球用户提供服务的，用户分布范围广，各地网络情况千差万别。
+
+在国内，有各个运营商网络互通难的问题。
+
+而中美光缆的数次故障，也让一些对国外用户依赖较大的网站不得不考虑在海外建立数据中心。
+
+
+
+#### 安全环境恶劣
+
+由于互联网的开放性，使得互联网更容易受到攻击，大型网站几乎每天都会遇到黑客攻击情况。
+
+2011年国内多个重要网站泄漏用户密码，让普通用户也直面一次互联网安全问题。
+
+
+
+#### 需求快速变更，发布频繁
+
+和传统软件的版本发布频率不同，互联网产品为快速适应市场，满足用户需求，其产品发布频率也是极高的。
+
+Office 的产品版本以年为单位发布，而一般大型网站的产品每周都有新版本发布上线，至于中小型网站的发布就更频繁了，有时候一天会发布几十次。
+
+
+
+#### 渐进式发展
+
+不同于传统软件产品或者企业应用系统，一开始就规划好全部的功能和非功能需求，几乎所有的大型互联网站都是从一个小网站开始，渐进的发展起来的。
+
+- Facebook是伯克扎克同学在哈佛大学的宿舍里开发的；
+- Google的第一台服务器部署在斯坦福大学的实验室里；
+- 阿里巴巴则是在马云家的客厅里诞生的。
+
+好的互联网产品都是慢慢运营出来的，不是一开始就开发好的。那些刚建立就投入巨资，有巨大背景的网站，后来发展都很惨淡。
+
+
+
+### 应对高并发挑战的两个技术方向
+
+#### 垂直伸缩
+
+通过升级硬件和网络吞吐能力可以实现垂直伸缩。由于不需要改变应用架构，所以通常被认为是最简单的短期伸缩性方案。
+
+- 通过使用RAID （独立冗余磁盘阵列）增加I/O吞吐能力。
+- 通过切换到SSD （固态硬盘）改善I/O 访问速度。
+- 通过增加内存减少I/O 操作
+- 通过升级网络接口或者增加网络接口提高网络吞吐能力。
+- 更新服务器使用更多处理器或者更多超线程。
+
+![1610020212572](ArchitectureAdvanced.assets/1610020212572-0022797.png)
+
+
+
+#### 垂直伸缩的缺点
+
+- 达到某个程度后，增加计算能力需要的更多的花费
+- 垂直伸缩有物理极限
+- 操作系统的设计或者应用程序自身制约着垂直伸缩，最多只能达到某个点
+
+![1610020398306](ArchitectureAdvanced.assets/1610020398306.png)
+
+
+
+#### 水平伸缩
+
+水平伸缩是指通过增加服务器提升计算能力的一类架构方法。
+
+水平伸缩被认为是伸缩性的圣杯，水平伸缩可以克服垂直伸缩带来的单位计算成本随计算能力增加而迅速飙升的问题。
+
+另外，水平伸缩总是可以增加更多服务器，这样，就不会像垂直伸缩那样遭遇到单台服务器的极限。
+
+![1610020585997](ArchitectureAdvanced.assets/1610020585997.png)
+
+
+
+#### 水平伸缩的优点
+
+![1610020658114](ArchitectureAdvanced.assets/1610020658114.png)
+
+
+
+
+
+### 互联网架构演化
+
+#### 第零阶段：最简单的互联网应用架构
+
+![1610021203609](ArchitectureAdvanced.assets/1610021203609.png)
+
+
+
+#### 第一阶段：应用与数据分离
+
+![1610021256166](ArchitectureAdvanced.assets/1610021256166.png)
+
+
+
+#### 第二阶段：使用缓存改善系统性能
+
+- 本地缓存
+- 远程分布式缓存
+
+![1610021275696](ArchitectureAdvanced.assets/1610021275696.png)
+
+
+
+#### 第三阶段：使用应用服务器集群改善系统的并发处理能力
+
+![1610021301346](ArchitectureAdvanced.assets/1610021301346.png)
+
+
+
+#### 第四阶段：数据库读写分离
+
+![1610021322793](ArchitectureAdvanced.assets/1610021322793.png)
+
+
+
+#### 第五阶段：使用反向代理和CDN加速网站响应
+
+- 在网络运营商机房，本地部署CDN服务器
+- 直接返回图片，文件等静态资源
+
+![1610021342683](ArchitectureAdvanced.assets/1610021342683-0022954.png)
+
+
+
+#### 第六阶段：使用分布式文件系统和分布式数据库系统
+
+![1610021364730](ArchitectureAdvanced.assets/1610021364730.png)
+
+
+
+#### 第七阶段：使用NoSQL和搜索引擎
+
+- 使用键值对方式缓存与存储数据，加速查找
+
+![1610021384989](ArchitectureAdvanced.assets/1610021384989.png)
+
+
+
+#### 第八阶段：业务拆分
+
+- 垂直拆分数据表，根据业务领域划分多个服务
+
+![1610021403051](ArchitectureAdvanced.assets/1610021403051.png)
+
+
+
+#### 第九阶段：微服务及中台化
+
+- 数据库太大，水平拆分数据表，进行分片处理，sharding
+
+![1610021424409](ArchitectureAdvanced.assets/1610021424409.png)
+
+
+
+#### 第十阶段：大数据与智能化
+
+
+
+
+
+### 互联网架构模式
+
+#### 架构模式
+
+每一个模式描述了一个在我们周围不断重复发生的问题以及该问题解决方案的核心。这样，你就能一次又一次的使用该方案而不必做重复工作。
+
+模式的关键在于模式的可重复性，问题与场景的可重复性带来解决方案的可重复使用。
+
+互联网架构模式就是试图去描述那些为解决互联网系统高性能、高可用、易扩展、可伸缩、安全等目标，被很多互联网应用重复使用的一些解决方案，这些解决方案是互联网软件系统的重要组成部分。
+
+
+
+#### 分层
+
+分层是企业应用系统中最常见的一种架构模式，将系统在横向维度上切分成几个部分，每一个部分负责一部分相对比较单一的职责，然后通过上层对下层依赖和调用组成一个完整的系统。
+
+
+
+#### 分割
+
+如果说分层是将软件在横向方面进行切分，那么分割就是在纵向方面对软件进行切分。
+
+系统越大，功能越复杂，服务和数据处理的种类也越多，将这些不同的功能和服务分割开来，包装成高内聚，低耦合的模块单元。
+
+一方面有助于软件的开发和维护，另一方面，便于不同模块的分布式部署，提高网站的并发处理能力和功能扩展能力。
+
+
+
+#### 分布式
+
+对于大型网站，分层和分割的一个主要目的是为了切分后的模块便于分布式部署，即将不同模块部署在不同的服务器上，通过远程调用协调工作。
+
+分布式意味着解决同样的问题可以使用更多的计算机，计算机越多，CPU，内存，存储资源也就越多，能够处理的并发访问和数据库量就越大。
+
+- 分布式应用和服务
+- 分布式静态资源
+- 分布式数据和存储
+- 分布式计算
+
+
+
+#### 集群
+
+使用分布式虽然已经将分层和分割后的模块独立部署，但是对于用户访问集中的模块，比如网站的首页，还需要独立部署的服务器集群化，即多态服务器部署相同应用构成一个集群，通过负载均衡设备共同对外提供服务。
+
+
+
+#### 缓存
+
+缓存就是将数据存放在距离计算最近的位置以加快处理速度。
+
+缓存是改善软件性能的第一手段，现代CPU越来越快的一个重要因素就是使用了更多的缓存，在复杂的软件设计中，缓存几乎无处不在。
+
+大型网站架构设计在很多方面都使用了缓存设计。
+
+- CDN
+- 反向代理
+- 本地缓存
+- 远程缓存
+
+
+
+#### 异步
+
+计算机软件发展的一个重要目标和驱动力是降低软件耦合性。
+
+事物之间越少直接关系，那么就越少被彼此影响，越可以独立发展。
+
+大型网站架构中，系统解耦合的手段除了前面提到的分层、分割、分布等手段，还有一个重要手段是异步，就是将一一个业务操作分成多个阶段，每个阶段之间通过共享数据而不是直接调用的方法进行协作。
+
+- 提高系统可用性
+- 加快网站响应速度
+- 消除并发访问高峰
+
+
+
+#### 冗余
+
+互联网应用需要 7x 24 小时连续运行，但是服务器总有可能会出现故障，特别是服务规模比较大的时候，服务器宕机是必然事件。
+
+要想保证服务器宕机的情况下网站依然可以继续服务，数据不会丢失，就需要一定程度的服务器冗余运行，数据冗余备份。
+
+
+
+#### 自动化
+
+在无人值守的情况下，网站可以正常运行，一切都可以自动化是网站的理想状态。
+
+目前互联网的自动化架构设计主要集中在运维方面。
+
+
+
+#### 安全
+
+互联网的开放特性使得其从诞生起就面对巨大的安全挑战，网站在安全架构方面也积累了许多模式：
+
+- 通过密码和手机校验码进行身份认证；
+- 登录、交易等操作需要对网络通讯进行加密，网站服务器上存储的敏感数据如用户信息等也进行加密处理；
+- 为了防止机器人程序滥用网络资源供给网站，网站使用验证码进行识别；
+- 对于常见的用于攻击网站的XSS攻击，SQL注入，进行编码转换等相应处理；
+- 对于垃圾信息、敏感信息进行过滤；
+- 对转账交易等重要操作根据交易模式和交易信息进行风险控制。
+
+
+
+
+
+### 互联网系统架构核心要素：如何衡量一个系统的架构设计
+
+#### 高性能
 
 
 
