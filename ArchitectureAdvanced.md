@@ -6067,16 +6067,6 @@ Web应用中将这些状态信息称作会话（Session），单机情况下， 
 
 
 
-
-
-
-
-### 搜索引擎
-
-#### 互联网搜索引擎整体架构
-
-
-
 ### Doris – 海量 KV Engine
 
 #### 当前现状
@@ -6454,6 +6444,175 @@ Data  Definition
 ### 分布式一致 Zookeeper
 
 #### 分布式系统脑裂
+
+在一个分布式系统中,不同服务器获得了互相冲突的数据信息或者执行指令,导致整个集群陷入混乱,数据损坏,被称作分布式系统脑裂。
+
+
+
+#### 数据库主主备份
+
+- 使用主主备份，保证一旦某个主故障，可以直接顶上去
+
+![1610526012431](ArchitectureAdvanced.assets/1610526012431.png)
+
+
+
+#### 分布式一致性算法 Paxos
+
+三个角色：
+
+- Proposer
+- Acceptor
+- Learner
+
+![1610526109560](ArchitectureAdvanced.assets/1610526109560.png)
+
+第一阶段: Prepare阶段。 Proposer向 Acceptors发出 Prepare请求, Acceptors针对收到的 Prepare请求进行 Promise承诺。    
+
+第二阶段: Accept阶段。 Proposer收到多数 Acceptors承诺的 Promise后,向  Acceptors发出 Propose请求, Acceptors针对收到的 Propose请求进行 Accept 处理。    
+
+第三阶段: Learn阶段。 Proposer在收到多数 Acceptors的 Accept之后,标志着本次 Accept成功,决议形成,将形成的决议发送给所有 Learners。
+
+![1610526211045](ArchitectureAdvanced.assets/1610526211045.png)
+
+Proposer 生成全局唯一且递增的Proposal ID（可使用时间戳加Server ID)，向所有Acceptors 发送Prepare 请求，这里无需携带提案内容，只携带 Proposal ID即可。
+
+Acceptors 收到Prepare和Propose 请求后
+
+- 不再接受Proposal ID小于等于当前请求的Prepare请求。
+- 不再接受Proposal ID小于当前请求的Propose 请求。
+
+
+
+#### Zookeeper 架构
+
+- 所有的 server 有一个 Leader
+
+![1610526292323](ArchitectureAdvanced.assets/1610526292323.png)
+
+
+
+#### Zab 协议
+
+- 一个 Leader 有多个 Follower
+
+![1610526350901](ArchitectureAdvanced.assets/1610526350901.png)
+
+![1610526421374](ArchitectureAdvanced.assets/1610526421374.png)
+
+
+
+#### Zookeeper 的树状记录结构
+
+![1610526470540](ArchitectureAdvanced.assets/1610526470540.png)
+
+
+
+#### Zookeeper API
+
+- String create(path,data,acl,flags)
+- void delete(path,expectedVersion)
+- Stat setData(path,data,expectedVersion)
+- (data,Stat)getData(path,watch)
+- Stat exists(path,watch)
+- Stringl] getChildren(path,watch)
+- void sync(path)
+- List multi(ops)
+
+
+
+
+
+#### 配置管理
+
+Administrator
+
+- setData（"/config/param1”,"value",-1)
+
+Consumer
+
+- getData(（"/config/param1",true)
+
+![1610526610527](ArchitectureAdvanced.assets/1610526610527.png)
+
+
+
+#### 选 master
+
+1.getdata("/servers/leader",true)
+2.if successful follow the leader described in the data and exit
+3.create("/servers/leader",hostname,EPHEMERAL)
+4.if successful lead and exit
+5.goto step1
+
+![1610526693621](ArchitectureAdvanced.assets/1610526693621.png)
+
+
+
+#### 选 master(python)
+
+```python
+# zookeeper 选主 Python 示例代码
+handle = zookeeper.init("localhost:2181", my_connection_watcher, 10000, 0)
+
+(data, stat) = zookeeper.get(handle, "/app/leader", True)
+
+if stat is None:
+    path = zookeeper.create(handle, "/app/leader", hostname:info, [ZOO_OPEN_ACL_UNSAFE], zookeeper.EPHEMERAL)
+
+    if path is None:
+        (data, stat) = zookeeper.get(handle, "/app/leader", True)
+        # someone else is the leader
+        # parse the string path that contains the leader address
+    else:
+    # we are the leader continue leading
+
+else:
+    # someone else is the leader
+    # parse the string path that contains the leader address
+```
+
+
+
+#### 集群管理（负载均衡）
+
+Monitoring process:
+1.Watch on /nodes
+2.On watch trigger do getChildren(/nodes,true)
+3.Track which nodes have gone away
+
+Each Node:
+1.Create /nodes/node-\${i}) as ephemeral nodes 
+2.Keep updating /nodes/node-\${i}periodically for node status changes(status updates could be load/iostat/cpu/others)
+
+![1610527542675](ArchitectureAdvanced.assets/1610527542675.png)
+
+
+
+#### Zookeeper 性能
+
+- 随着 server 的增加，写多的时候，请求变慢，是由于需要更多的server统一
+- 读多的时候，请求飞起，由于提供了更多的server提供读
+
+![1610527652080](ArchitectureAdvanced.assets/1610527652080.png)
+
+
+
+### 搜索引擎
+
+#### 互联网搜索引擎整体架构
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
