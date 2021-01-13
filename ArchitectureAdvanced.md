@@ -6606,7 +6606,194 @@ Each Node:
 
 #### 互联网搜索引擎整体架构
 
+![1610545521128](ArchitectureAdvanced.assets/1610545521128.png)
 
+
+
+#### 爬虫系统架构
+
+![1610545534948](ArchitectureAdvanced.assets/1610545534948.png)
+
+
+
+#### 爬虫禁爬协议
+
+![1610545552786](ArchitectureAdvanced.assets/1610545552786.png)
+
+
+
+#### 文档矩阵与倒排索引
+
+![1610545674358](ArchitectureAdvanced.assets/1610545674358.png)
+
+
+
+#### 文档与倒排索引
+
+![1610545723477](ArchitectureAdvanced.assets/1610545723477.png)
+
+
+
+#### 带词频的倒排索引
+
+![1610545765156](ArchitectureAdvanced.assets/1610545765156.png)
+
+
+
+#### 带词频与位置的倒排索引
+
+![1610545811924](ArchitectureAdvanced.assets/1610545811924.png)
+
+
+
+#### Lucene 架构
+
+![1610545824503](ArchitectureAdvanced.assets/1610545824503.png)
+
+
+
+#### Lucene 倒排索引
+
+![1610545891127](ArchitectureAdvanced.assets/1610545891127.png)
+
+
+
+#### Lucene 索引文件准实时更新
+
+索引有更新，就需要重新全量创建一个索引来替换原来的索引。这种方式在数据量很大时效率很低，并且由于创建一次索引的成本很高，性能也很差。
+
+Lucene 中引入了**段**的概念，将一个索引文件拆分为多个子文件，每个子文件叫做段，每个段都是一个独立的可被搜索的数据集，索引的修改针对段进行操作。
+
+- 新增：当有新的数据需要创建索引时，原来的段不变，选择新建一个段来存储新增的数据。
+- 删除：当需要删除数据时，在索引文件新增一个.del的文件，用来专门存储被删除的数据ID。当查询时，被删除的数据还是可以被查到的，只是在进行文档链表合并时，才把已经删除的数据过滤掉。被删除的数据在进行段合并时才会被真正被移除。
+- 更新：更新的操作其实就是删除和新增的组合，先在.del文件中记录旧数据，再在新段中添加一条更新后的数据。
+
+为了控制索引里段的数量，我们必须定期进行段合并操作
+
+
+
+
+
+#### ElasticSearch 架构
+
+- 索引分片，实现分布式
+- 索引备份，实现高可用
+- API更简单，更高级
+
+![1610546089601](ArchitectureAdvanced.assets/1610546089601.png)
+
+
+
+#### ES 分片预分配与集群扩容
+
+- shard = hash（routing）% number_of_primary_shards
+
+![1610546179910](ArchitectureAdvanced.assets/1610546179910.png)
+
+
+
+#### 网页排名算法 PageRank
+
+PageRank，网页排名，又称为网页级别，Google 左侧排名或佩奇排名，是一种由搜索引擎根据网页之间相互的超链接计算的技术，而作为网页排名的要素之一，以Google公司创始人 拉里·佩奇（Larry Page）之姓来命名。
+
+
+
+#### PageRank 让链接来投票
+
+PageRank 通过网络浩瀚的超链接关系来确定一个页面的等级。
+
+Google 把从A页面到B页面的链接解释为A页面给B页面投票， Google根据投票来源（甚至来源的来源，即链接到A页面的页面）和投票目标的等级来决定新的等级。简单的说，一个高等级的页面可以使其他低等级页面的等级提升。
+
+一个页面的「得票数」由所有链向它的页面的重要性來决定，到一个页面的超链接相当于对该页投一票。一个页面的 PageRank是由所有链向它的页面（「链入页面」）的重要性经过递归算法得到的。一个有较多链入的页面会有较高的等级，相反如果一个页面没有任何链入页面，那么它没有等级。
+
+![1610546485462](ArchitectureAdvanced.assets/1610546485462.png)
+
+
+
+#### PageRank 算法
+
+假设一个 由4个页面组成的小团体：A，B，C和D。如果所有页面都链向A，那么A的PR（PageRank）值将是 B，C和D的 PageRank 总和。
+
+![1610546606409](ArchitectureAdvanced.assets/1610546606409.png)
+
+继续假设B也有链接到C,并且D也有链接到包括A的3个页面。一个页面不能投票2  次。所以B给每个页面半票。以同样的逻辑,D投出的票只有三分之一算到了A的  PageRank上。
+
+![1610546673741](ArchitectureAdvanced.assets/1610546673741.png)
+
+换句话说，根据链出总数平分一个页面的 PR 值。
+
+![1610546724919](ArchitectureAdvanced.assets/1610546724919.png)
+
+互联网中一个网页只有对自己的出链，或者几个网页的出链形成一个循环圈。那么在不断地迭代过程中，这一个或几个网页的PR值将只增不减，显然不合理。
+
+如下图中的C网页，就是刚刚说的是有对自己的出链的网页。
+
+![1610546738204](ArchitectureAdvanced.assets/1610546738204.png)
+
+为了解决这个问题。我们想象一个随机浏览网页的人,假定他有一个确定的概率会输入网址直接跳转到一个随机的网页,并且跳转到每个网页的概率是一样的。于是则此图中A  的PR值可表示为：
+
+![1610546902180](ArchitectureAdvanced.assets/1610546902180.png)
+
+PageRank 计算公式：
+
+![1610546936925](ArchitectureAdvanced.assets/1610546936925.png)
+
+PageRank值是一个特殊矩阵中的特征向量。这个特征向量为：
+
+![1610546983011](ArchitectureAdvanced.assets/1610546983011.png)
+
+![1610546993931](ArchitectureAdvanced.assets/1610546993931.png)
+
+
+
+#### 一个电影搜索引擎案例
+
+- 豆瓣：https://www.douban.com/
+
+![1610547086971](ArchitectureAdvanced.assets/1610547086971.png)
+
+
+
+##### 文档文件 subject.dat
+
+![1610547156493](ArchitectureAdvanced.assets/1610547156493.png)
+
+
+
+##### 倒排索引文件
+
+![1610547172439](ArchitectureAdvanced.assets/1610547172439.png)
+
+
+
+#### 加权词频排序算法
+
+![1610547292248](ArchitectureAdvanced.assets/1610547292248.png)
+
+
+
+##### 源码
+
+https://github.com/itisaid/sokeeper Web 应用
+https://github.com/itisaid/cmdb 爬虫，倒排索引构建
+
+
+
+#### 汉语处理组件包（汉语分词）
+
+https://github.com/hankcs/HanLP
+
+![1610547397295](ArchitectureAdvanced.assets/1610547397295.png)
+
+
+
+#### 一个智能助理机器人案例
+
+- https://github.com/zhihuili/robot
+
+![1610547481818](ArchitectureAdvanced.assets/1610547481818.png)
+
+![1610547493376](ArchitectureAdvanced.assets/1610547493376.png)
 
 
 
@@ -6931,6 +7118,12 @@ Spark 任务文件初始化调优
 
 
 ### 操作系统
+
+
+
+
+
+
 
 
 
