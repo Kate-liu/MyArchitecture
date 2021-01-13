@@ -5459,6 +5459,12 @@ if (!hashCircle.containsKey(hash)) {  // key 的 hash 值是否和虚拟节点�
 return hashCircle.get(hash);
 ```
 
+- 一个比一致性 hash 算法还快的分区路由算法
+- 基于虚拟节点的一致性 Hash 算法
+- https://github.com/itisaid/Doris/tree/master/common/doris.common/doris.algorithm/src/main/java/com/alibaba/doris/algorithm/vpm
+
+
+
 
 
 
@@ -6063,9 +6069,378 @@ Web应用中将这些状态信息称作会话（Session），单机情况下， 
 
 
 
+
+
+### 搜索引擎
+
+#### 互联网搜索引擎整体架构
+
+
+
+### Doris – 海量 KV Engine
+
+#### 当前现状
+
+网站关键业务有许多海量KV数据存储和访问需求。
+
+**站UDAS使用。
+
+- 存在问题：扩容困难、写性能较低、实时性低等
+
+网站有多套KV方案，接口不统一，运维成本高。
+
+- **站 UDAS - BDB
+- **站：TT
+
+飞天 KV Engine（Aspara）问题。
+
+- 使用复杂
+- 性能较低
+
+
+
+#### 产品需求
+
+产品定位：海量分布式透明化 KV 存储引擎
+
+解决问题：
+
+- 替换 UDAS：解决扩容迁移复杂，维护困难的问题。
+- **站海量KV数据存储
+  - Global SEO，1亿 Product，2.4T 数据量
+  - 2011年底：3.1
+- **站
+  - WholeSale Global SEO
+  - Product 数：1600 w， 2.8T
+  - 2011年底：3400w，5.8T
+- **站
+  - 风控用户行为日志：每月2亿，40G，增长很快
+
+
+
+#### 产品目标
+
+功能目标          
+
+- KV存储 Engine  
+- 逻辑管理: Namespace  
+- 二级索引 
+
+非功能目标:                          
+
+- 海量存储:透明集群管理,存储可替换  
+- 伸缩性:线性伸缩,平滑扩容  
+- 高可用:自动容错和故障转移  
+- 高性能:低响应时间,高并发  
+- 扩展性:灵活扩展新功能 
+-  低运维成本
+  - 易管理  
+  - 可监控
+
+约束
+
+- 一致性:最终一致性
+
+
+
+#### 技术指标
+
+![1610516107148](ArchitectureAdvanced.assets/1610516107148.png)
+
+
+
+#### 逻辑架构
+
+二层架构 - Client、DataServer + Store
+
+四个核心组件 - Client、DataServer 、 Store、Administration
+
+![1610516219522](ArchitectureAdvanced.assets/1610516219522.png)
+
+
+
+#### KV Storage 概念模型
+
+- Machine: 物理机
+- Node: 分区单元，一台 Machine 可运行多个 Node
+- Namespace: 数据的逻辑划分 Tag，Client 可识别。数据管理无需识别。
+
+![1610516346997](ArchitectureAdvanced.assets/1610516346997.png)
+
+
+
+#### 关键技术 - 数据分区
+
+- 解决海量数据存储    
+- 客户端计算分区    
+- 分区算法(Partition Policy)    
+- Client向 Config Server抓取分区配置
+
+![1610516479886](ArchitectureAdvanced.assets/1610516479886.png)
+
+
+
+##### 基于虚拟节点的分区算法
+
+均衡性：数据分布均衡
+
+波动性：X（M+X），优于一致性Hash的X/M。
+
+![1610516575970](ArchitectureAdvanced.assets/1610516575970.png)
+
+
+
+##### 物理节点由2个扩充到3个，映射关系变化
+
+每个虚拟节点对应两个对等物理节点，Primary节点公式：
+
+![1610516763768](ArchitectureAdvanced.assets/1610516763768.png)
+
+Secondary节点：  S=N+1-P
+
+- z: 虚拟节点下标
+- N: 虚拟节点总数
+- x: 物理节点下标（一维下标）
+- y: 物理节点对应虚拟节点下标（二维下标）
+
+![1610516821303](ArchitectureAdvanced.assets/1610516821303.png)
+
+
+
+##### 基本访问架构
+
+对等Node 访问
+
+双写保证可用性（W=2，R=1）
+
+基于分区算法查找两个 Node
+
+- Copy 1 Node
+- Copy  2 Node
+
+数据恢复和数据同步
+
+- Redo Log
+- Update Log
+
+![1610516973556](ArchitectureAdvanced.assets/1610516973556.png)
+
+
+
+#### 集群管理 - 健康检查和配置抓取
+
+检查1: ConfigServer 对 DataServer心跳检查    
+
+检查2: Client 访问时Fail报告
+
+其他 Client定时配置抓取
+
+![1610517175062](ArchitectureAdvanced.assets/1610517175062.png)
+
+
+
+#### 关键技术 - 可用性关键场景
+
+瞬时失效    
+
+临时失效              
+
+- 服务端升级或者网络暂时不可用  
+- 失效机器在短时内可恢复(例如:2小时内)  
+- 恢复后数据和失效前一致
+
+永久失效
+
+- 机器下线
+
+
+
+#### 关键技术 - 临时失效的 fail over
+
+物理节点2临时失效,并在可接受时间内恢复    
+
+物理节点x:备用节点,临时存放失效的物理节点2的数据,物理节点2恢复后迁移回物理节点2    
+
+物理节点2临时失效及恢复期间物理节点1承担所有read操作(虽然有点冒险，但是需要赌一把物理节点1不会宕机)
+
+![1610517429615](ArchitectureAdvanced.assets/1610517429615.png)
+
+
+
+#### 关键技术 - 永久失效的 fail over
+
+每份 Data 写两份保证高可用：Copy1, Copy2
+
+一致性处理： version(timestamp)
+
+- Conflict Check & Merge
+
+![1610517545758](ArchitectureAdvanced.assets/1610517545758.png)
+
+
+
+#### 关键技术 - 扩容实施数据迁移
+
+##### 基本原理
+
+集群扩容,新增 Node X.    
+
+旧路由算法: Route1(key1)={pn1,pn2}    
+
+新路由算法: Route2(key1)={pn1,pnx}    
+
+新旧算法有一个Node相同,因此只需要迁移一个Node
+
+Pn2 数据迁移到 pnx，client 不再对pn2 数据操作
+
+- R 操作 只在 pn1上
+- W/R操作指向 {pn1,pnx}    
+
+Client 对等结点中的一个pn1不变（路由算法保证）
+
+![1610517902623](ArchitectureAdvanced.assets/1610517902623.png)
+
+
+
+##### 迁移过程
+
+基本原理:基于遍历的路由对比迁移(描述见备注)
+
+- 迁移时,计算两个 Route算法。不相同则迁移。
+- 采用改进的分区路由算法,减少迁移量:X(M+X)
+
+![1610517984419](ArchitectureAdvanced.assets/1610517984419.png)
+
+
+
+#### 数据可识别功能 - 逻辑数据结构
+
+Namespace: 一个业务实体数据的集合
+
+Data  Definition
+
+- Namespace 的 MetaData 数据结构定义，满足“数据定义可描述”的需求。
+
+![1610518114747](ArchitectureAdvanced.assets/1610518114747.png)
+
+
+
+#### 产品规划
+
+##### Doris 和平台产品关系
+
+![1610518184445](ArchitectureAdvanced.assets/1610518184445.png)
+
+
+
+##### 产品规划（功能和版本）
+
+![1610518238706](ArchitectureAdvanced.assets/1610518238706.png)
+
+
+
+#### Doris Q2研发计划 
+
+##### 功能需求
+
+数据模型        
+
+- Key- Value结构  
+- Namespace支持      
+
+数据访问
+
+- 基本KV AP规范
+- KV Client:抽象AP, 调用框架  
+- 高性能通信
+
+
+
+
+
+##### 非功能需求
+
+非功能需求      
+
+- 分区和线性伸缩:改进的分区路由算法    
+- 可用性:对等Node,写2, Failover  
+- 透明集群管理和配置抓取  
+- 实时平滑扩容  
+- 存储可替换和BDB实现
+
+管理和运维
+
+- 集群管理  
+- 基本集群监控(接入 Dragoon)
+
+
+
+
+
+#### Doris 0.1.0项目计划
+
+- DEV: 3+2
+- QA: 2
+
+![1610518529872](ArchitectureAdvanced.assets/1610518529872.png)
+
+
+
+#### 实时计划 Q3 - Q4
+
+*站** (Product多语言)
+
+- 业务范围: Product,产品摘要,产品描述,产品属性, Company    
+- 当前UDAS支持情况      
+  - 数据量:2.4T, Product数1亿,机器:10台
+  - 商业pV:800w, KV PV:1.08亿,14ms-100ms, tps:250  
+- 2011年底:产品数和存储量+30%,3.1T
+
+*站**  
+
+- Product数:1600w
+- 存储量:2.8    
+- 2011年底: Product3400w,5.8T
+                          
+
+
+
+#### Q/A
+
+- 进行项目的问答环节
+
+
+
+#### Doris 项目申请专利
+
+- 路由信息更新方法及装置
+- 一种分布式存储系统的数据迁移方法、设备和系统
+- 分布式存储系统管理装置及方法
+
+![1610518857153](ArchitectureAdvanced.assets/1610518857153.png)
+
+![1610518874653](ArchitectureAdvanced.assets/1610518874653.png)
+
+![1610518892435](ArchitectureAdvanced.assets/1610518892435.png)
+
+
+
+#### 算法
+
+- 基于虚拟节点的一致性 Hash 算法
+- https://github.com/itisaid/Doris/tree/master/common/doris.common/doris.algorithm/src/main/java/com/alibaba/doris/algorithm/vpm
+- Doris/common/doris.common/doris.algorithm/src/main/java/com/alibaba/doris/algorithm/vpm/VpmRouterAlgorithm.java
+
+
+
+
+
+
+
 ### 作业与实践
 
 下面两题，至少选做一题：
+
 1. 请简述 CAP 原理
 
 2. 针对 Doris 案例，请用 UML 时序图描述 Doris 临时失效的处理过程（包括判断系统进入临时失效状态，临时失效中的读写过程，失效恢复过程）
@@ -6079,20 +6454,6 @@ Web应用中将这些状态信息称作会话（Session），单机情况下， 
 ### 分布式一致 Zookeeper
 
 #### 分布式系统脑裂
-
-
-
-### 搜索引擎
-
-#### 互联网搜索引擎整体架构
-
-
-
-### Doris – 海量 KV Engine
-
-#### 当前现状
-
-
 
 
 
