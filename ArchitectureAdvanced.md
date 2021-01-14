@@ -7112,6 +7112,7 @@ Spark 任务文件初始化调优
 - 输入参数： URL，请求总次数，并发数。
 - 输出参数：平均响应时间，95%响应时间。
 - 用这个测试工具以10并发、100次请求压测 www.baidu.com
+- 示例程序：[PressureTest.](Data/PressureTest.java)
 
 
 
@@ -7119,9 +7120,543 @@ Spark 任务文件初始化调优
 
 ### 操作系统
 
+#### 程序运行时架构
+
+- 程序是静态的
+- 程序运行起来以后，被称为进程。
+
+![1610619792095](ArchitectureAdvanced.assets/1610619792095.png)
 
 
 
+#### 操作系统多任务运行环境
+
+计算机的CPU核心数是有限的。但是,服务器可以同时处理数以百计甚至数以千计的并发用户请求。        
+
+那么,计算机如何做到的? 
+
+- 进程分时执行
+
+
+
+#### 进程的运行期状态
+
+运行:当一个进程在CPU上运行时,则称该进程处于运行状态。处于运行状态的进程的  数目小于等于CPU的数目。        
+
+就绪:当一个进程获得了除CPU以外的一切需资源,只要得到CPU即可运行,则称此进程处于就绪状态,就绪状态有时候也被称为等待运行状态。        
+
+阻塞:也称为等待或睡眠状态,当一个进程正在等待某一事件发生(例如等待I/0完成,  等待锁…而暂时停止运行,这时即使把CPU分配给进程也无法运行,故称该进程处于阻塞状态。
+
+
+
+#### 进程 VS 线程
+
+不同进程轮流在CPU上执行,每次都要进行进程间CPU切换,代价非常大。因此服务器应用通常是单进程多线程。        
+
+进程从操作系统获得基本的内存空间,所有的线程共享着进程的内存地址空间。而每个线程也会拥有自己私有的内存地址范围,其他线程不能访问。
+
+![1610624799535](ArchitectureAdvanced.assets/1610624799535.png)
+
+
+
+#### 线程栈
+
+```java
+void f(){
+  int x = g(1);
+  x++;  // g 函数返回，当前堆栈顶部为 f 函数栈帧，在当前栈帧继续执行 f 函数的代码
+}
+
+int g(int x){
+  return x + 1;
+}
+```
+
+![1610624928840](ArchitectureAdvanced.assets/1610624928840.png)
+
+
+
+#### Java Web 应用多线程运行时视图
+
+- 物理服务器
+- 操作系统
+- JVM进程
+- Tomcat容器
+- 应用程序
+
+![1610625063666](ArchitectureAdvanced.assets/1610625063666.png)
+
+
+
+#### 线程安全
+
+当某些代码修改内存堆（进程共享内存）里的数据的时候，如果有多个线程在同时执行，就可能会出现同时修改数据的情况。
+
+比如，两个线程同时对一个堆中的数据执行+1操作，最终这个数据只会被加一次，这就是人们常说的线程安全问题，实际上线程的结果应该是依次加一，即最终的结果应该是+2。
+
+![1610625146514](ArchitectureAdvanced.assets/1610625146514.png)
+
+
+
+#### 临界区
+
+多个线程访问共享资源的这段代码被称为临界区,解决线程安全问题的主要方法是使用锁,将临界区的代码加锁,只有获得锁的线程才能执行临界区代码。
+
+```java
+lock.lock();  // 线程获得锁
+i++;  // 临界区代码，i位于堆中
+lock.unlock();  // 线程释放锁
+```
+
+
+
+#### 阻塞导致高并发系统崩溃
+
+锁（IO）会引起线程阻塞。
+
+阻塞导致线程既不能继续执行，也不能释放资源。进而导致资源耗尽，最终导致系统崩溃。
+
+![1609080423706](ArchitectureAdvanced.assets/1609080423706.png)
+
+
+
+#### 避免阻塞引起的崩溃
+
+限流:控制进入计算机的请求数,进而减少创建的线程数。        
+
+降级:关闭部分功能程序的执行,尽早释放线程。        
+
+反应式:异步;无临界区(Actor模型)
+
+
+
+### 锁
+
+#### 锁原语 CAS
+
+CAS(V, E, N)         
+
+-  V表示要更新的变量  
+- E表示预期值  
+- N表示新值
+
+如果V值等于E值,则将V的值设为N,若值和E值不同,什么都不做。        
+
+CAS是一种系统原语,原语的执行必须是连续的,在执行过程中不允许被中断。
+
+
+
+#### Java通过CAS原语在对象头中修改Mark Word实现加锁
+
+- 正常
+- 偏向锁
+- 轻量级锁
+- 重量级锁
+
+![1610625615730](ArchitectureAdvanced.assets/1610625615730.png)
+
+
+
+#### 偏向锁、轻量级锁、重量级锁
+
+偏向锁：指一段同步代码一直被一个线程所访问，那么该线程会自动获取锁，降低获取锁的代价
+
+轻量级锁：指当锁是偏向锁时，被另一个线程所访问，偏向锁就会升级为轻量级锁，其他线程会通过自旋的形式尝试获取锁，不会阻塞，提高性能
+
+重量级锁：指当锁是轻量级锁时，另一个线程虽然自旋，但自旋不会一直持续下去，当自旋到一定次数时，还没获取到锁，就会进入阻塞，该锁膨胀为重量级锁，重量级锁会让其他申请的线程进入阻塞，性能降低
+
+
+
+#### 多CPU情况下的锁
+
+- 缓存一致性协议，总线锁机制
+
+![1610626093700](ArchitectureAdvanced.assets/1610626093700.png)
+
+
+
+#### 总线锁与缓存锁
+
+总线锁：使用处理器的LOCK#信号，当一个处理器在内存总线上输出此信号的时候，其他处理器的请求将被阻塞，该处理器独占内存。
+
+缓存锁：是指内存区域如果被缓存在处理器的缓存行中，并且在Lock操作期间被锁定，那么当它执行锁操作回写到内存时，处理器不在总线上声言LOCK#信号，而是修改内部的内存地址，并允许它的缓存一致性机制来保证操作的原子性，因为缓存一致性机制会阻止同时修改由两个以上处理器缓存的内存区域数据，当其他处理器回写已被锁定的缓存行数据时，会使缓存行无效。
+
+
+
+#### 公平锁、非公平锁
+
+公平锁就是多个线程按照申请锁的顺序来获得锁的。
+
+非公平锁就是多个线程获取锁的顺序并不是按照申请锁的顺序，有可能后申请的线程比先申请的线程优先获取锁，可能会造成饥饿现象。
+
+
+
+#### 可重入锁
+
+可重如就是说某一个线程已经获得某个锁，可以再次获取锁而不会出现死锁。
+
+
+
+#### 独享锁/互斥锁、共享锁、读写锁
+
+独享锁/互斥锁：该锁一次只能被一个线程所持有
+
+共享锁：该锁可以被多个线程锁持有
+
+读写锁：多个读线程之间并不互斥，而写线程则要求与任何线程互斥
+
+
+
+#### 乐观锁、悲观锁
+
+悲观锁认为对于同一个数据的并发操作，一定是会发生修改的，哪怕没有修改，也会认为修改。因此对于同一个数据的并发操作，悲观锁采取加锁的形式。悲观的认为，不加锁的并发操作一定会出问题。
+
+乐观锁则认为对于同一个数据的并发操作，是不会发生修改的。在更新数据的时候，检查是否已经被修改过，如果修改过，就放弃。
+
+
+
+#### 分段锁
+
+分段锁的设计目的是细化锁的粒度，当操作不需要更新整个数组的时候，就仅仅针对数组的一段进行加锁操作。
+
+JDK ConcurrentHashMap 是通过分段锁的形式来实现高效并发操作的。
+
+
+
+#### 自旋锁
+
+自旋锁是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗CPU。
+
+
+
+
+
+
+
+
+
+### 异步并发分布式编程框架akka
+
+#### Akka's vision
+
+Simpler concurrency (scale up)
+
+Simpler distribution (scale out)
+
+Simpler fault-tolerance (self healing)
+
+All of that with a single unified programming model
+
+![1610627075194](ArchitectureAdvanced.assets/1610627075194.png)
+
+![1610627098198](ArchitectureAdvanced.assets/1610627098198.png)
+
+
+
+#### The Akka toolkit
+
+Akka runs on the JVM
+
+Akka can be used from java and acala
+
+Akka can be integrated with common infrastructure, e.g. Spring, etc.
+
+
+
+
+
+#### Core concept: Actor
+
+Carl Hewitt (1973): Fundamental unit of computation
+
+- Behavior - react on messages it receives
+- State - shielded from the rest of the world, no need for synchronization
+- Communication - interact with other actors exclusively via mesages
+
+
+
+#### The Akka Actor
+
+![1610627380429](ArchitectureAdvanced.assets/1610627380429.png)
+
+![1610627401846](ArchitectureAdvanced.assets/1610627401846.png)
+
+
+
+
+
+#### Receive message
+
+- One at a time
+
+```java
+public class Hello extends UntypedActor {
+  
+    @Override
+    public void onReceive(Object message) {
+        System.out.println("Hello, world!");
+    }
+}
+```
+
+
+
+#### Send message
+
+- Asynchronous and nonblocking
+
+```java
+ActorRef hello = ...;
+
+hello.tell("Hi!");
+```
+
+
+
+#### ActorRef path
+
+Local
+
+- Akka: //Master/user/master
+
+Remote
+
+- Akka.tcp: //Master@sr148:2054/user/master
+
+
+
+#### The Akka ActorSystem
+
+![1610627751759](ArchitectureAdvanced.assets/1610627751759.png)
+
+
+
+#### Create an actor system
+
+```java
+ActorSystem system = ActorSystem.create("hello");
+```
+
+
+
+
+
+#### Create a top-level actor
+
+```java
+ActorRef hello = system.actorOf(new Props(new hello()));
+```
+
+
+
+#### Create a child actor
+
+```java
+ActorRef child = context().actorOf(new Props(new Child()));
+```
+
+
+
+#### Router for cluster
+
+```java
+val router = system.actorOf(Props[SomeActor].withRouter(RoundRobinRouter(nrOfInstances = 5)));
+```
+
+
+
+#### Enbrace failure
+
+Let it crash!
+
+Supervision: Like in real life, parents supervise their children (manage children's failures)
+
+Depending on the parents supervisor strategy, failing actors can get stopped, restarted or resumed
+
+```java
+private SupervisorStrategy strategy = new OneForStrategy(
+		10,
+    Duration.parse("1 minute"),
+    new Function<Throwable, Directive>() {
+        @Override
+        public Directive apply(Throwable t) {
+            if (t instanceof ArithmeticException) return resume();
+            else if (t instanceof NullPointerException)  return restart();
+            else  return escalate();
+        }
+    }
+);
+
+@Override
+public SupervisorStrategy supervisorStrategy() {
+    return strategy;
+}
+```
+
+
+
+
+
+#### The HakkyHour bar
+
+Our drinks: Ajjarita, MaiPlay, PinaScalada
+
+Our actors: guests, waiters, head waiter, barkeepers
+
+Our messages: Order, drink served, complaint, etc
+
+Our failure: Guest drunk, waiter frustrated
+
+
+
+
+
+#### HakkyHour message
+
+![1610628715906](ArchitectureAdvanced.assets/1610628715906.png)
+
+
+
+#### Benefits of using Akka actors
+
+You don't have to deal with concurrency details
+
+You can manage failures easily
+
+Distribute is just a deployment decision (not convered here)
+
+```properties
+akka {
+	actor {
+		deployment {
+			"/creationActor/*" {
+				remote = "akka.tcp://CalculatorWorkerSystem@127.0.0.1:2552"
+			}
+		}
+	}
+}
+```
+
+
+
+#### Akka 在金融借贷领域的应用
+
+![1610629015946](ArchitectureAdvanced.assets/1610629015946.png)
+
+
+
+### NewFeatures in Dew
+
+参见：[基于akka开发的大数据集群性能监控与优化系统Dew](Data/基于akka开发的大数据集群性能监控与优化系统Dew.pdf)
+
+网址：https://github.com/zhihuili/Dew
+
+
+
+
+
+### 文件与硬盘I/O
+
+#### 机械硬盘
+
+![1610630726248](ArchitectureAdvanced.assets/1610630726248.png)
+
+
+
+#### 固态硬盘
+
+![1610630915123](ArchitectureAdvanced.assets/1610630915123.png)
+
+
+
+#### B+树
+
+![1610630928050](ArchitectureAdvanced.assets/1610630928050.png)
+
+
+
+#### LSM 树
+
+- Log Structed Merge Tree(LSM树)
+
+![1610630939610](ArchitectureAdvanced.assets/1610630939610.png)
+
+
+
+#### 文件控制块
+
+文件系统将硬盘空间以块为单位进行划分，每个文件占据若干个块，然后再通过一个文件控制块 FCB 记录每个文件占据的硬盘数据块。
+
+![1610630953006](ArchitectureAdvanced.assets/1610630953006.png)
+
+
+
+#### Linux INode 文件控制块
+
+- inode 中记录着文件权限、所有者、修改时间和文件大小等文件属性信息，以及文件数据块硬盘地址索引。
+- inode是固定结构的，能够记录的硬盘地址索引数也是固定的，只有 15个索引。
+- 每个inode最多可以存储12+256+256*256+256*256*256个数据块，如果每个数据块的大小为4k，也就是单个文件最大不超过70G。
+
+![1610631160714](ArchitectureAdvanced.assets/1610631160714.png)
+
+
+
+#### RAID 独立硬盘冗余阵列
+
+- RAID 0
+- RAID 1
+- RAID 10
+- RAID 5 （常用）
+- RAID 6
+
+![1610631204528](ArchitectureAdvanced.assets/1610631204528.png)
+
+![1610631266477](ArchitectureAdvanced.assets/1610631266477.png)
+
+
+
+#### 分布式文件系统 HDFS
+
+- NameNode
+- DataNode
+
+![1610631302658](ArchitectureAdvanced.assets/1610631302658.png)
+
+
+
+
+
+
+
+
+
+### 作业与实践
+
+#### 第一题
+
+有两个单向链表（链表长度分别为m, n），这两个单项链表有可能在某个元素合并，如下图所示的这样，也可能不合并。
+
+现在给定两个链表的头指针，在不修改链表的情况下，如何快速地判断这两个链表是否合并？如果合并，找到合并的元素，也就是图中的X元素。
+
+请用（伪）代码描述算法，并给出时间复杂度和空间复杂度。
+
+![1610630272471](ArchitectureAdvanced.assets/1610630272471.png)
+
+
+
+#### 第二题
+
+请画出 DataNode 服务器节点宕机的时候，HDFS的处理程序时序图。
+
+
+
+
+
+
+
+### 数据结构与算法
+
+#### 时间复杂度与空间复杂度
 
 
 
