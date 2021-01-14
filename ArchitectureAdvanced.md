@@ -7545,7 +7545,7 @@ akka {
 
 
 
-### NewFeatures in Dew
+### 基于akka开发的大数据集群性能监控与优化系统Dew
 
 参见：[基于akka开发的大数据集群性能监控与优化系统Dew](Data/基于akka开发的大数据集群性能监控与优化系统Dew.pdf)
 
