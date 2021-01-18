@@ -8036,11 +8036,555 @@ int g(int x){
 
 #### Web 请求的一次网络通信历程
 
-
+![1610969391960](ArchitectureAdvanced.assets/1610969391960.png)
 
 
 
 #### OSI 七层模型和 TCP/IP 四层模型
+
+- 应用层（HTTP）
+- 表示层
+- 会话层
+- 传输层（TCP，UDP）
+- 网络层（IP）
+- 数据链路层（mac）
+- 物理层
+
+![1610969418331](ArchitectureAdvanced.assets/1610969418331.png)
+
+![1610969458554](ArchitectureAdvanced.assets/1610969458554.png)
+
+
+
+#### 网络数据包格式
+
+![1610969908930](ArchitectureAdvanced.assets/1610969908930.png)
+
+
+
+#### 物理层
+
+物理层负责数据的物理传输,计算机输入输出的只能是01这样的二进制数据,但是在真正的通信线路里有光纤、电缆、无线各种设备。
+
+光信号和电信号,以及无线电磁信号在物理上是完全不同的,如何让这些不同的设备能够理解、处理相同的二进制数据,这就是物理层要解决的问题。
+
+
+
+#### 链路层
+
+链路层就是将数据进行封装后交给物理层进行传输,主要就是将数据封装成数据帧,以帧为单位通过物理层进行通信,有了帧,就可以在帧上进行数据校验,进行流量控制。        
+
+链路层会定义帧的大小,这个大小也被称为最大传输单元。
+
+像HTTP要在传输的数据上添加一个HTTP头一样,数据链路层也会将封装好的帧添加一个帧头,帧头里记录的一个重要信息就是发送者和接受者的MAC地址。MAC地址是网卡的设备标识符,是唯一 的,数据帧通过这个信息确保数据送达到正确的目标机器。
+
+
+
+##### 数据链路层负载均衡
+
+![1610361116518](ArchitectureAdvanced.assets/1610361116518.png)
+
+
+
+#### 网络层
+
+网络层IP协议使得互联网应用根据IP地址就能访问到目标服务器，请求离开App后，到达运营服务商的交换机，交换机会根据这个IP地址进行路由转发，可能中间会经过很多个转发节点，最后数据到达目标服务器。
+
+网络层的数据需要交给链路层进行处理，而链路层帧的大小定义了最大传输单元，网络层的IP数据包必须要小于最大传输单元才能进行网络传输，这个数据包也有一个IP头，主要包括的就是发送者和接受者的IP地址。
+
+
+
+
+
+##### IP 负载均衡
+
+![1610360688551](ArchitectureAdvanced.assets/1610360688551.png)
+
+
+
+#### 传输层（TCP协议）
+
+IP 协议不是一个可靠的通信协议，不会建立稳定的通信链路，并不会确保数据一定送达。要保证通信的稳定可靠，需要传输层协议 TCP。
+
+TCP协议是一种面向连接的、可靠的、基于字节流的传输层协议。TCP作为一个比较基础的通讯协议，有很多重要的机制保证了TCP协议的可靠性和强壮性：
+
+- 使用序号，对收到的TCP报文段进行排序和检测重复的数据
+- 无错传输，使用校验和检测报文段的错误
+- 使用确认和计时器来检测和纠正丢包或者延时
+- 流量控制，避免主机分组发送得过快而使接收方来不及完全收下
+- 拥塞控制，发送方根据网络承载情况控制分组的发送量，以获得高性能同时避免拥塞崩溃丢失包的重传
+
+TCP建立连接的3次握手过程
+
+- 1.App先发送SYN=1,Seq=X的报文,表示请求建立连接,是一个随机数;   
+- 2.服务器收到这个报文后,应答SYN=1,  ACK=X+1,Seq=Y的报文,表示同意建立  连接;       
+- 3.App收到这个报文后,检查ACK的值为自己发送的Seq值+1,确认建立连接,并发送ACK=Y+1的报文给服务器;
+- 服务器收到这个报文后检查ACK值为自己发送的Seq 值+1,确认建立连接。
+- 至此,App和服务器  建立起TCP连接,就可以进行数据传输了。
+
+![1610970267861](ArchitectureAdvanced.assets/1610970267861.png)
+
+TCP关闭连接4次挥手
+
+- 客户端向服务器端发送一个FIN,请求关闭数据传输。
+- 当服务器接收到客户端的FIN时,向客户端发送一个ACK,其中ACK的值等于FIN+SEQ。
+- 然后服务器向客户端发送一个FIN，告诉客户端应用程序关闭。      
+- 当客户端收到服务器端的FIN时,回复一个ACK给服务器端。其中ACK 的值等于FIN+SEQ。
+
+![1610970404340](ArchitectureAdvanced.assets/1610970404340.png)
+
+
+
+#### 应用层 HTTP 协议
+
+而互联网应用需要在全球范围为用户提供服务，将全球的应用和全球的用户联系在一起，需要一个统一的应用层协议，这个协议就是 HTTP 协议。
+
+![1610970493540](ArchitectureAdvanced.assets/1610970493540.png)
+
+
+
+##### HTTP 请求的7中方法
+
+- Get:只读请求,请求处理过程不应该产生副作用,即web应用不应该因为get请求而发生任何状态改变。 
+- Head:和get方法一样,但是只返回响应头。    
+- Post:提交请求。    
+- Put:上传请求。    
+- Delete:删除URL标识的资源。    
+- Trace:回显服务器收到的请求,用以测试或者诊断。    
+- options: 请求服务器返回支持的所有HTTP请求方法,测试服务器是否正常。
+
+![1610970607705](ArchitectureAdvanced.assets/1610970607705.png)
+
+
+
+##### HTTP 响应的5种状态
+
+- 1xx消息一请求已被服务器接收,继续处理  
+- 2xx成功一请求已成功被服务器接收、理解、并接受    
+- 3xx重定向一需要后续操作才能完成这一请求  
+- 4x请求错误一一请求含有词法错误或者无法被执行    
+- 5x服务器错误一一服务器在处理某个正确请求时发生错误
+
+![1610970683467](ArchitectureAdvanced.assets/1610970683467.png)
+
+
+
+##### HTTP 协议版本
+
+1996 年发布了 HTTP/1.0，在HTTP/1.0 中，客户端和服务器之间交换的每个请求/响应都会创建一个新的 TCP 连接，这意味着所有请求之前都需要进行TCP握手连接，因此所有请求都会产生延时。
+
+![1610970951281](ArchitectureAdvanced.assets/1610970951281.png)
+
+HTTP/1.1试图引入保持连接的概念来解决这些问题，它允许客户端复用 TCP连接，从而分摊了建立初始连接和针对多个请求缓慢启动的成本。但任意时刻上每个连接只能执行一次请求/响应交换。
+
+随着网络的发展，网站所需资源（CSS、JavaScript 和图像等）不断增长，浏览器在获取和呈现网页时需要越来越多的并发性。但由于HTTP/1.1只允许客户端同时进行一次HTTP请求/响应交换，因此在网络层上获得并发能力的唯一方法是并行使用多个 TCP连接。
+
+![1610971045530](ArchitectureAdvanced.assets/1610971045530.png)
+
+HTTP/2引入了HTTP“流”的概念，允许将不同的HTTP并发地复用到同一TCP连接上，使浏览器更高效地复用TCP连接。
+
+HTTP/2解决了单个TCP连接的使用效率低的问题，现在可以通过同一连接同时传输多个请求/响应。但是，TCP并不理解HTTP流，当多个HTTP请求复用一个TCP连接，如果前面的请求/响应没有处理完，后面的请求/响应也无法处理，也就是会出现队头堵塞现象。
+
+![1610971134302](ArchitectureAdvanced.assets/1610971134302.png)
+
+HTTP/3不是使用TCP作为会话的传输层而是使用QUIC(一种新的互联网传输协议)。
+
+该协议在传输层将流作为一等公民引入。多个QUIC流共享相同的QUIC连接，因此不需要额外的握手和慢启动来创建新的QUIC流。但QUIC流是独立的,因此在大  多数情况下,只影响一个流的丢包不会影响其他流,这是因为QUIC数据包封装在UDP 数据包。
+
+![1610971249396](ArchitectureAdvanced.assets/1610971249396.png)
+
+
+
+### 非阻塞网络 I/O
+
+#### 计算机之间如何进行网络请求？
+
+- Socket，端口
+
+![1610971354632](ArchitectureAdvanced.assets/1610971354632.png)
+
+
+
+#### 服务器 - 客户端
+
+![1610971388155](ArchitectureAdvanced.assets/1610971388155.png)
+
+
+
+#### 多线程服务器 - 客户端
+
+![1610971426084](ArchitectureAdvanced.assets/1610971426084.png)
+
+
+
+#### 线程池服务器
+
+![1610971443214](ArchitectureAdvanced.assets/1610971443214.png)
+
+
+
+#### BIO Blocking I/O 阻塞 I/O
+
+阻塞 I/O：进行 I/O 操作时，用户线程会一直阻塞，直到读操作或者写操作完成。
+
+![1610971568984](ArchitectureAdvanced.assets/1610971568984.png)
+
+
+
+#### Socket 接收数据，系统内核的处理过程
+
+- socket 缓冲区这个概念
+
+![1610971621729](ArchitectureAdvanced.assets/1610971621729.png)
+
+
+
+#### 非阻塞I/O（Non-Blocking I/O）
+
+非阻塞I/O: I/O操作立即返回发起线程不会阻塞等待。    
+
+非阻塞read操作:    
+
+- Socket接收缓冲区有数据,读n个(不保证数据被读完整,因此有可能需要多次读)。    
+- Socket接收缓冲区没数据,则返回失败(不会等待)。
+
+非阻塞 write:
+
+- Socket发送缓冲区满,返回失败(不会等待)  
+- Socket发送缓冲区不满,写n个数据(不保证一次性全部写入,因此可能需要多次写)
+
+![1610971815286](ArchitectureAdvanced.assets/1610971815286.png)
+
+
+
+#### Java NIO (New I/O)
+
+- Selector(选择器)
+- Buffer(缓存)
+- SelectableChannel(通道)
+- SelectionKey
+
+![1610971919856](ArchitectureAdvanced.assets/1610971919856.png)
+
+![1610971984682](ArchitectureAdvanced.assets/1610971984682.png)
+
+
+
+#### Java IO 与 NIO 比较
+
+```java
+// java IO
+
+ServerSocket serverSocket = new ServerSocket(port);
+
+while (true) {
+    final Socket socket = serverSocket.accept();
+
+    new Thread(new Runnable() {
+        @Override
+        public void run() {
+            InputStream in = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
+
+            byte[] content = new byte[1024];
+            int len;
+            StringBuilder sb = new StringBuilder();
+
+            while ((len = in.read(content)) != -1) {
+                sb.append(content, 0, len);
+            }
+            out.write("Receive Success!\n".getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            socket.shutdownOutput();
+
+            // ...
+        }
+    }).start();
+    
+}
+```
+
+```java
+// java NIO
+
+InetSocketAddress address = new InetSocketAddress(8888);
+ServerSocketChannel server = ServerSocketChannel.open();
+server.bind(address);
+server.configureBlocking(false);
+
+Selector selector = Selector.open();
+server.register(selector, SelectionKey.OP_ACCEPT);
+
+while (true) {
+    selector.select();
+    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+
+    while (keys.hasNext()) {
+        SelectionKey key = keys.next();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+
+        if (key.isAcceptable()) {
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+            SocketChannel channel = serverSocketChannel.accept();
+            channel.configureBlocking(false);
+            channel.register(selector, SelectionKey.OP_READ);
+        }
+
+        if (key.isReadable()) {
+            SocketChannel channel = (SocketChannel) key.channel();
+            channel.read(buffer);
+            // ...
+            channel.register(selector, SelectionKey.OP_WRITE);
+        }
+
+        if (key.isWritable()) {
+            SocketChannel channel = (SocketChannel) key.channel();
+            channel.write(buffer);
+            // ...
+            channel.register(selector, SelectionKey.OP_READ);
+        }
+
+        keys.remove();
+    }
+}
+```
+
+
+
+#### 系统 I/O 复用方式：select, poll, epoll
+
+![1610973267775](ArchitectureAdvanced.assets/1610973267775.png)
+
+
+
+##### Select（poll）管理下的read过程
+
+![1610973336025](ArchitectureAdvanced.assets/1610973336025.png)
+
+
+
+##### epoll 管理下的read过程
+
+![1610973388337](ArchitectureAdvanced.assets/1610973388337.png)
+
+
+
+#### 无活动连接时，Selector.select 方法被阻塞
+
+![1610973742321](ArchitectureAdvanced.assets/1610973742321.png)
+
+
+
+
+
+### 数据库架构原理
+
+#### PreparedStatement 预编译
+
+```java
+statement.executeUpdate("UPDATE Users SET stateus 2 WHERE userlD=233");     
+
+PreparedStatement updateUser = con.prepareStatement("UPDATE Users SET stateus=? WHERE userlD=233");    
+updateUser.setInt(1, 2);    
+updateUser.executeUpdate();
+```
+
+
+
+#### 数据库架构
+
+- 连接器
+- 语法分析器
+- 语义分析与优化器
+- 执行引擎
+
+![1610973759884](ArchitectureAdvanced.assets/1610973759884.png)
+
+
+
+#### 连接器
+
+数据库连接器会为每个连接请求分配一块专用的内存空间用于会话上下文管理。
+
+建立连接对数据库而言相对比较重,需要花费一定的时间,因此应用程序启动的时候,通常会初始化建立一些数据库连接放在连接池里,这样当处理外部请求执行SQL操作的时候,  就不需要花费时间建立连接了。
+
+
+
+#### 语法分析器
+
+```sql
+select s_grade from staff where s_city not in (select p_city from proj where s_empname=p_pname)
+```
+
+![1610974068571](ArchitectureAdvanced.assets/1610974068571.png)
+
+```sh
+mysql> explain select* from users whee id=1;    
+
+ERROR 1064(42000): You have an error in your SQL syntax; check the manual that  corresponds to your MySQL server version for the right syntax to use near 'id 1'at line 1
+```
+
+
+
+#### 语义分析与优化器
+
+语义分析与优化器就是要将各种复杂嵌套的SQL进行语义等价转化,得到有限几种关系  代数计算结构,并利用索引等信息进一步进行优化。                       
+
+```sql
+select f.id from orders f join users u on f.user_id=u.id;
+-- 相互等价
+select f.id from orders f where f user_id =(select id from users);
+```
+
+
+
+#### 执行计划
+
+> 使用 explain 加 SQL语句，可以看到执行计划。
+
+Key: 索引类型，NULL无索引
+
+Rows: 需要处理的行数
+
+Possible_keys：潜在可以利用的索引
+
+![1610975324742](ArchitectureAdvanced.assets/1610975324742.png)
+
+
+
+#### 为什么PrepareStatement更好
+
+PrepareStatement 会预先提交带占位符的 SQL到数据库进行预处理，提前生成执行计划，当给定占位符参数，真正执行SQL的时候，执行引擎可以直接执行，效率更好一点。
+
+PrepareStatement 可以防止 SQL注入攻击。
+
+- select * from users where username = 'Frank'；
+- Frank'；drop table users；--
+- select * from users where username = 'Frank'；drop table users；--'；
+- select * from users where username = ？；
+
+
+
+
+
+#### B+ 树
+
+- 所有的数据都存储在叶子节点
+
+![1610975444827](ArchitectureAdvanced.assets/1610975444827.png)
+
+
+
+#### 聚簇索引
+
+聚簇索引：聚簇索引的数据库记录和索引存储在一起。
+
+MySQL数据库的主键就是聚簇索引，主键ID和所在的记录行存储在一个B+树中。
+
+![1610975564550](ArchitectureAdvanced.assets/1610975564550.png)
+
+
+
+
+
+#### 非聚簇索引
+
+非聚簇索引在叶子节点记录的就不是数据行记录，而是聚簇索引，也就是主键。
+
+通过非聚簇索引找到主键索引，再通过主键索引找到行记录的过程也被称作回表。
+
+![1610975674970](ArchitectureAdvanced.assets/1610975674970.png)
+
+
+
+#### 添加必要的索引优化SQL查询性能
+
+在几百行的数据库中查找一个记录，如果没有索引，就需要全表扫描，检索所有的行记录，才能找到需要的记录。
+
+![1610975774168](ArchitectureAdvanced.assets/1610975774168.png)
+
+
+
+#### 合理使用索引
+
+不要盲目添加索引，尤其在生产环境中
+
+- 添加索引的 alter 操作会消耗较长的时间（分钟级）
+- alter操作器件，所有数据库的增删改操作全部阻塞，对应用而言，因为连接不能释放，事实上，查询也被阻塞。
+
+删除不用的索引，避免不必要的增删开销。
+
+使用更小的数据类型创建索引
+
+- int 4 字节，bigint 8字节
+- Timestamp 4 字节，Datetime  8 字节
+
+
+
+
+
+#### 数据库事务
+
+事务特性ACID
+
+- 原子性( Atomicity):事务要么全部完成,要么全部取消。如果事务崩溃,状态回到事务之前(事务回滚)。      
+- 隔离性( Ilsolation):如果2个事务T1和T2同时运行,事务T1和T2最终的结果是相同的,不管T1和T2谁先结束,隔离性主要依靠锁实现。      
+- 持久性( Durability):一旦事务提交,不管发生什么(崩溃或者出错),数据要保存在数据库中。      
+- 一致性( Consistency):只有合法的数据(依照关系约束和函数约束)才能写入数据库。
+
+```sql
+begin;  -- 开始一个事务
+update table set A = A - 1 亿;  -- 伪sql, 仅作为示意
+update table set B = B + 1 亿;
+-- 其他读写操作
+commit;  -- 提交事务
+```
+
+
+
+#### 数据库事务日志
+
+进行事务操作时,事务日志文件会记录更新前的数据记录,然后再更新数据库中的记录,  如果全部记录都更新成功,那么事务正常结束,如果过程中某条记录更新失败,那么整个事务全部回滚,已经更新的记录根据事务日志中记录的数据进行恢复, 这样全部数据都恢复到事务提交前的状态,仍然保持数据一致性
+
+- LSN:一个按时间顺序分配的唯一事务记录日志序列号。  
+- TransID:产生操作的事务ID。  
+- PageID:被修改的数据在磁盘上的位置。  
+- PreVLSN:同一个事务产生的上一条日志记录的指针  
+- UNDO:取消本次操作的方法,按照此方法回滚。  
+- REDO:重复本次操作的方法。
+
+![1610976342803](ArchitectureAdvanced.assets/1610976342803.png)
+
+
+
+### JVM 虚拟机
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
