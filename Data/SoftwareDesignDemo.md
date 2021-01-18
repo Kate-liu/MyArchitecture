@@ -38,7 +38,7 @@
 
 ### 2.1 系统部署图 
 
-![系统部署图](../SoftwareDesignDemo.assets/系统部署图.png)
+![系统部署图](SoftwareDesignDemo.assets/系统部署图.png)
 
 子系统 1 的功能职责为……，部署……台服务器，依赖……和……子系统，实现 ……功能。
 
@@ -48,7 +48,7 @@
 
 ### 2.2 下单场景子系统序列图 
 
-![下单场景子系统序列图](../SoftwareDesignDemo.assets/下单场景子系统序列图.png)
+![下单场景子系统序列图](SoftwareDesignDemo.assets/下单场景子系统序列图.png)
 
 1.下单时，子系统先发送……消息到子系统 3，子系统 3 需要执行……完成……处理，然后发送……消息到财务系统，消息中包含……数据。
 
@@ -58,7 +58,7 @@
 
 ### 2.3 退款场景子系统序列图 
 
-![退款场景子系统序列图](../SoftwareDesignDemo.assets/退款场景子系统序列图.png)
+![退款场景子系统序列图](SoftwareDesignDemo.assets/退款场景子系统序列图.png)
 
 
 
@@ -70,7 +70,7 @@
 
 ### 2.4 退款场景子系统活动图 
 
-![退款场景子系统活动图](../SoftwareDesignDemo.assets/退款场景子系统活动图.png)
+![退款场景子系统活动图](SoftwareDesignDemo.assets/退款场景子系统活动图.png)
 
 如图所示：
 
