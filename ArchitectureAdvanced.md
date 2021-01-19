@@ -7642,13 +7642,18 @@ akka {
 
 ![1610630272471](ArchitectureAdvanced.assets/1610630272471.png)
 
+参考答案：
+
+- [answer1](Data/linkedlist1.1.md)
+- [answer2](Data/linkedlist1.2.md)
+
 
 
 #### 第二题
 
 请画出 DataNode 服务器节点宕机的时候，HDFS的处理程序时序图。
 
-
+![HDFSDataNodeNameNode](ArchitectureAdvanced.assets/HDFSDataNodeNameNode.jpg)
 
 
 
@@ -9052,6 +9057,18 @@ public class StaticClass {
 - JVM
 - 编程框架
 - 一致性 hash 算法的虚拟化实现
+
+
+
+
+
+### 作业与实践
+
+请简述 JVM 垃圾回收原理。
+
+设计一个秒杀系统，主要的挑战和问题有哪些？核心的架构方案或者思路有哪些？
+
+
 
 
 
