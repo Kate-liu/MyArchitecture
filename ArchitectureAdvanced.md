@@ -8559,6 +8559,504 @@ commit;  -- 提交事务
 
 ### JVM 虚拟机
 
+#### JVM 组成架构
+
+Java 是一种跨平台的语言，JVM屏蔽了底层系统的不同。为Java字节码文件构造了一个统一的运行环境。
+
+- java org.apache.catalina.startup.Bootstrap "$@" start
+
+![1611054927111](ArchitectureAdvanced.assets/1611054927111.png)
+
+
+
+#### Java字节码文件
+
+Java如何实现在不同操作系统、不同硬件平台上，都可以不用修改代码就能顺畅地执行？
+
+计算机领域的任何问题都可以通过增加个中间层（虚拟层）来解决
+
+Java 所有的指令有200个左右，一个字节（8位）可以存储256种不同的指令信息，一个这样的字节称为**字节码**（Bytecode）。
+
+在代码的执行过程中，JVM将字节码解释执行，屏蔽对底层操作系统的依赖，JVM也可以将字节码编译执行，如果是热点代码，会通过JIT动态地编译为机器码，提高执行效率。
+
+- 字节码的标志魔术数字是：cafe babe
+
+![1611055039901](ArchitectureAdvanced.assets/1611055039901.png)
+
+
+
+#### 字节码执行流程
+
+- 注意：方法调用计数器加1，表示的是一个方法的调用次数，进行编译和解释执行的判断依据。
+
+![1611055156370](ArchitectureAdvanced.assets/1611055156370.png)
+
+
+
+#### Java字节码文件编译过程
+
+- 词法解析
+- 语法分析
+- 生成字节码
+
+![1611055217102](ArchitectureAdvanced.assets/1611055217102.png)
+
+
+
+#### 类加载器的双亲委托模型        
+
+低层次的当前类加载器,不能覆盖更高层次类加载器已经加载的类。如果低层次的类加载器想加载一个未知类,需要上级类加载器确认,只有当上级类加载器没有加载过这个类,也允许加载的时候,才让当前类加载器加载这个未知类。
+
+![1611055301521](ArchitectureAdvanced.assets/1611055301521.png)
+
+
+
+#### 自定义类加载器
+
+- 隔离加载类：同一个JVM中不同组件加载同一个类的不同版本。
+- 扩展加载源：从网络、数据库等处加载字节码。
+- 字节码加密：加载自定义的加密字节码，在ClassLoader中解密。
+
+```java
+public class CustomClassLoader extends ClassLoader {
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            byte[] result = getClassFromCustomPath(name);
+
+            if (result == null) {
+                throw new FileNotFoundException();
+            } else {
+                return defineClass(name, result, 0, result.length);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        throw new ClassNotFoundException(name);
+    }
+
+    private byte[] getClassFromCustomPath(String name) {
+        // 从自定义路径中加载指定类
+        return new byte[0];
+    }
+
+    public static void main(String[] args) {
+        CustomClassLoader customClassLoader = new CustomClassLoader();
+        try {
+            Class<?> clazz = Class.forName("one", true, customClassLoader);
+            Object obj = clazz.newInstance();
+            System.out.println(obj.getClass().getClassLoader());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+}
+```
+
+
+
+#### 堆 & 栈
+
+堆：每个JVM实例唯一对应一个堆。应用程序在运行中所创建的所有类实例或数组都放在这个堆中，并由应用所有的线程共享。
+
+堆栈：JVM为每个新创建的线程都分配一个堆栈。也就是说，对于一个Java程序来说，它的运行就是通过对堆栈的操作来完成的。
+
+Java中所有对象的存储空间都是在堆中分配的，但是这个对象的引用却是在堆栈中分配，也就是说在建立一个对象时从两个地方都分配内存，在堆中分配的内存实际建立这个对象，而在堆栈中分配的内存只是一个指向这个堆对象的引用而已。
+
+
+
+#### 方法区 & 程序计数器        
+
+方法区主要存放从磁盘加载进来的类字节码,而在程序运行过程中创建的类实例则存放在堆里。
+
+程序运行的时候,实际上是以线程为单位运行的,当JVM进入启动类的main 方法的时候,就会为应用程序创建一个主线程,main方法里的代码就会被这个主线程执行,每个线程有自己的Java栈,栈里存放着方法运行期的局部变量。而当前线程执行 到哪一行字节码指令,这个信息则被存放在程序计数寄存器。
+
+![1611056103665](ArchitectureAdvanced.assets/1611056103665.png)
+
+
+
+#### Java （线程）栈
+
+所有在方法内定义的基本类型变量，都会被每个运行这个方法的线程放入自己的栈中，线程的栈彼此隔离，所以这些变量一定是线程安全的。
+
+![1610624928840](ArchitectureAdvanced.assets/1610624928840.png)
+
+
+
+#### 线程工作内存 & volatile
+
+Java内存模型规定在多线程情况下，线程操作主内存变量，需要通过线程独有的工作内存拷贝主内存变量副本来进行。
+
+一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，保证了不同线程对这个变量进行操作时的可见性，即一个线程修改了某个变量的值，这新值对其他线程来说是立即可见的。
+
+![1611056276111](ArchitectureAdvanced.assets/1611056276111.png)
+
+
+
+#### Java 运行环境
+
+![1611056379267](ArchitectureAdvanced.assets/1611056379267.png)
+
+
+
+#### JVM 的垃圾收
+
+JVM垃圾回收就是将JVM堆中的已经不再被使用的对象清理掉，释放宝贵的内存资源。
+
+JVM通过一种**可达性分析算法**进行垃圾对象的识别，具体过程是：从线程栈帧中的局部变量，或者是方法区的静态变量出发，将这些变量引用的对象进行标记，然后看这些被标记的对象是否引用了其他对象，继续进行标记，所有被标记过的对象都是被使用的对象，而那些没有被标记的对象就是可回收的垃圾对象了。
+
+进行完标记以后，JVM就会对垃圾对象占用的内存进行回收，回收主要有三种方法
+
+- 清理：将垃圾对象占据的内存清理掉，其实JVM并不会真的将这些垃圾内存进行清理，而是将这些垃圾对象占用的内存空间标记为空闲，记录在一个空闲列表里，当应用程序需要创建新对象的时候，就从空闲列表中找一段空闲内存分配给这个新对象。
+- 压缩：从堆空间的头部开始，将存活的对象拷贝放在一段连续的内存空间中，那么其余的空间就是连续的空闲空间。
+- 复制：将堆空间分成两部分，只在其中一部分创建对象，当这个部分空间用完的时候，将标记过的可用对象复制到另一个空间中。
+
+![1611056613156](ArchitectureAdvanced.assets/1611056613156.png)
+
+
+
+#### JVM 分代垃圾回收
+
+- 新生代：（Eden 区 、From 区，To 区）
+- 老年代
+
+![1611056655801](ArchitectureAdvanced.assets/1611056655801.png)
+
+
+
+#### JVM 垃圾回收器算法
+
+- 串行（单核时代）
+- 并行
+- CMS
+- G1
+- ZGC
+
+![1611056733792](ArchitectureAdvanced.assets/1611056733792.png)
+
+
+
+#### G1 垃圾回收内存管理机制
+
+将整个内存区域分成不同的块，对于每一个块进行垃圾回收。
+
+![1611056802494](ArchitectureAdvanced.assets/1611056802494.png)
+
+
+
+#### Java 启动参数
+
+标准参数,所有的JVM实现都必须实现这些参数的功能,而且向后兼容       
+
+-  运行模式- server, -client  
+- 类加载路径-cp,- classpath  
+- 运行调试- verbose  
+- 系统变量-D
+
+非标准参数,默认jvm实现这些参数,但不保证所有jvm实现都实现,且不保证向后兼容                  
+
+- -Xms初始堆大小 
+-  Xmx最大堆大小  
+- Xmn新生代大小  
+- Xss线程堆栈大小
+
+非 Stable参数,此类参数各个jm实现会有所不同,将来可能会随时取消
+
+- -xx: Use ConcMarkSweepGC  启用CMS垃圾回收                                                       
+
+
+
+#### JVM 性能诊断工具
+
+基本工具： JPS, JSTAT, JMAP, JSTACK
+
+集成工具：JConsole, JVisualVM
+
+
+
+#### JPS        
+
+JPS用来查看host上运行的所有java进程的id ( jvmid), 一般情况下使用这个工具的目的 只是为了找出运行的jvm进程id,即 jvmid,然后可以进一步使用其它的工具来     监控和分析JVM。
+
+常用的几个参数:
+
+- -l 输出java应用程序的 main class的完整包  
+- -q 仅显示pid,不显示其它任何相关信息          
+- -m 输出传递给main方法的参数
+- -v 输出传递给JVM的参数。在诊断JVM相关问题的时候,这个参数可以查看JVM相关参数的设置
+
+
+
+#### JSTAT        
+
+JSTAT(“Java Virtual Machine statistics monitoring tool”) 是JDK自带的一个轻量级小工具。
+
+主要对Java应用程序的资源和性能进行实时的命令行的监控,包括了对Heap  size和垃圾回收状况的监控。    
+
+语法结构如下: jstat[Options] vmid [interval] [count]
+
+- Options --选项,我们一般使用 -gcutil 查看gc情况  
+- vmid --VM的进程号,即当前运行的java进程号  
+- interval --间隔时间,单位为毫秒  
+- count --打印次数,如果缺省则打印无数次
+
+```sh
+$ jstat -gcutil 7784 1000 10                                              
+  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
+  0.00  92.05   4.15  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.15  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.24  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.38  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.47  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.51  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.60  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.65  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.74  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+  0.00  92.05   4.87  43.64  95.82  91.93      7    0.039     2    0.070    0.109
+```
+
+- S0 -- Heap上的 Survivor space 0 区已使用空间的百分比  
+- S1 -- Heap上的 Survivor space 1区已使用空间的百分比 
+- E  -- Heap上的 Eden space区已使用空间的百分比  
+- O -- Heap上的 Old space区已使用空间的百分比  
+- YGC -- 从应用程序启动到采样时发生 Young GC的次数  
+- YGT -- 从应用程序启动到采样时 Young GC所用的时间(单位秒)  
+- FGC -- 从应用程序启动到采样时发生 Full GC的次数  
+- FGCT -- 从应用程序启动到采样时 Full GC所用的时间(单位秒)  
+- GCT--从应用程序启动到采样时用于垃圾回收的总时间(单位秒)
+
+
+
+#### JMAP
+
+JMAP是一个可以输出所有内存中对象的工具,甚至可以将JVM中的heap,以二进制输出成文本。        
+
+使用方法
+
+- jmap -histo pid>a.log 可以将其保存到文本中去,在一段时间后,使用文本对比工具,可以对比出GC回收了哪些对象。 
+- jmap -dump:formatb,file=f1 PID 可以将该 PID 进程的内存 heap输出出来到f1文件里。
+                                 
+
+
+
+#### JSTACK
+
+Jstack 可以查看 jvm 内的线程堆栈信息
+
+```sh
+$ jps                                                                          ─╯
+7459 RemoteMavenServer36
+7285
+8054 Launcher
+8055 MainFm
+7335 RemoteMavenServer36
+8087 Jps
+
+$ jstack -l 8055                                                               ─╯
+2021-01-19 20:05:52
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.231-b11 mixed mode):
+
+"Prism Font Disposer" #24 daemon prio=10 os_prio=31 tid=0x00007ff57c957000 nid=0x11533 in Object.wait() [0x000070000618a000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:144)
+	- locked <0x00000007406f70c8> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:165)
+	at com.sun.javafx.font.Disposer.run(Disposer.java:93)
+	at java.lang.Thread.run(Thread.java:748)
+
+   Locked ownable synchronizers:
+	- None
+```
+
+
+
+#### JConsole
+
+![1611058018024](ArchitectureAdvanced.assets/1611058018024.png)
+
+
+
+#### JVisualVM
+
+![1611058057663](ArchitectureAdvanced.assets/1611058057663.png)
+
+
+
+
+
+### Java 代码优化
+
+#### 合理并谨慎使用多线程        
+
+使用场景(1O阻塞,多CPU并发)    
+
+资源争用与同步问题    
+
+java.util.concurrent      
+
+**启动线程数** = [任务执行时间/(任务执行时间 - IO等待时间) * CPU内核数
+
+- 最佳启动线程数和CPU内核数量成正比,和IO阻塞时间成反比。
+- 如果任务都是CPU计算型任务,那么线程数最多不超过CPU内核数,因为启动再多线程,CPU也来不及调度;
+- 相反如果是任务需要等待磁盘操作,网络响应,那么多启动线程有助于提高任务并发度,提高系统吞吐能力,改善系统性能。
+
+
+
+#### 竞态条件与临界区        
+
+在同一程序中运行多个线程本身不会导致问题,问题在于多个线程访问了相同的资源。    
+
+当两个线程竞争同一资源时,如果对资源的访问顺序敏感,就称存在竞态条件。导致竞态条件发生的代码区称作临界区。    
+
+在临界区中使用适当的同步就可以避免竞态条件。
+
+
+
+#### Java 线程安全
+
+允许被多个线程安全执行的代码称作线程安全的代码    
+
+方法局部变量          
+
+- 局部变量存储在线程自己的栈中。
+- 也就是说,局部变量永远也不会被多个线程共享。所以,  基础类型的局部变量是线程安全的
+
+方法局部的对象引用     
+
+- 如果在某个方法中创建的对象不会逃逸出该方法,那么它就是线程安全的 
+
+对象成员变量
+
+- 对象成员存储在堆上。如果两个线程同时更新同个对象的同一个成员,那这个代码就不是程安全的
+
+
+
+
+
+#### 面试问题
+
+Java Web 应用的多线程从哪儿来的？（Tomcat容器的）
+
+Servlet 是线程安全的吗？（本身是安全的，实现的方法不是安全的，因为存在局部变量，存储在方法区）
+
+
+
+#### ThreadLocal
+
+创建一个ThreadLocal 变量（X类静态成员变量）：
+
+- public static ThreadLocal my ThreadLocal=new ThreadLocal()；
+
+存储此对象的值（A类a方法）：
+
+- X.myThreadLocal.set("A thread local value")；
+
+读取一个ThreadLocal对象的值（B类b方法）：
+
+- String threadLocalValue=(String)X.my ThreadLocal.get()；
+
+```java
+public class CustomThreadLocal {
+    public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+
+        if (map != null) {
+            map.set(this, value);
+        } else {
+            createMap(t, value);
+        }
+    }
+
+    void createMap(Thread t, T firstValue) {
+        t.threadLocals = new ThreadLocal.ThreadLocalMap(this, firstValue);
+    }
+
+    void getMap(Thread t) {
+        return t.threadLocals;
+    }
+}
+```
+
+![1611058750799](ArchitectureAdvanced.assets/1611058750799.png)
+
+
+
+#### Java 内存泄漏
+
+Java 内存泄漏是由于开发人员的错误引起的。
+
+如果程序保留对永远不再使用的对象的引用，这些对象将会被占用并耗尽内存。
+
+- 长生命周期对象
+- 静态容器
+- 缓存
+
+
+
+#### 代码优化建议
+
+合理使用线程池和对象池
+
+- 复用线程或对象资源,避免在程序的生命期中创建和删除大量对象 
+- 池管理算法(记录哪些对象是空闲的,哪些对象正在使用)  
+- 对象内容清除( Thread Local的清空)
+
+使用合适的JDK容器类(顺序表,链表,Hash)
+
+- LinkList和 ArrayList的区别及适用场景  
+- HashMap的算法实现及应用场景  
+- 使用 concurrent包, ConcurrentHashMap和 HashMap的线程安全特性有什么不同?
+
+缩短对象生命周期,加速垃圾回收
+
+- 减少对象驻留内存的时间  
+- 在使用时创建对象,用完释放  
+- 创建对象的步骤(静态代码段-静态成员变量-父类构造函数-子类构造函数)
+
+```java
+public class StaticClass {
+    static {
+        A a = new A();
+    }
+  
+  public static void cc() {
+      System.out.println("cc");
+  }
+}
+```
+
+使用 I/O buffer 及 NIO
+
+- 延迟写与提前读策略
+- 异步无阻塞 IO 通信
+
+优先使用组合代替继承
+
+- 减少对象耦合
+- 避免太深的继承层次带来的对象创建性能损失
+
+合理使用单例模式
+
+- 无状态对象
+- 线程安全
+
+计算机的任何问题都可以通过虚拟层（或者中间层）解决
+
+- 面向接口编程
+- 7层网络协议
+- JVM
+- 编程框架
+- 一致性 hash 算法的虚拟化实现
+
+
+
+### 秒杀
+
 
 
 
