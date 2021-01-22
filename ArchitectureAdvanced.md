@@ -1660,6 +1660,10 @@ The structures of large systems tend to disintegrate during development, qualita
 
 ### 形形色色的架构师
 
+#### MBTI 测试
+
+
+
 #### 按作用划分架构师
 
 - 设计型架构师
@@ -9802,9 +9806,770 @@ Service Mesh 是一个基础设施层，用于处理服务间的通信，通常�
 
 
 
+### RPC 协议实现原理
+
+#### 远程过程调用（RPC）
+
+- client
+- server
+
+![1611312752882](ArchitectureAdvanced.assets/1611312752882.png)
 
 
 
+#### 通讯协议（Communications Protocol）
+
+通讯协议在电信领域中是指在任何物理介质中允许两个或多个在传输系统中的终端之间传播信息的系统标准,也是指计算机通信或者网络设备的共同语言。        
+
+一个完整的应用层通信协议通常包含两个部分
+
+- 网络通信协议: TCP、UDP    
+- 编码传输协议: 二进制、文本、协议头格式
+
+
+
+#### 为什么设计私有通讯协议？
+
+充分并有效利用通讯协议里的每个字段，减少冗余数据传输
+
+灵活满足自定义通讯需求，例如CRC校验、Server Fail-fast、自定义序列化器
+
+最大程度满足性能需求：IO模型和线程模型的充分利用
+
+
+
+#### 常见的协议模式
+
+| 常见协议 | 定长协议                                                     | 特殊结束符协议                                               | 变长协议（协议头 + 协议体）                                  |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 特点     | 协议内容长度是固定的，读写性能高                             | 相对于定长协议，使用特殊结束符作为协议内容的分隔符，在数据传输和高效间取一个平衡 | 使用固定长度的协议头记录协议体的特征，例如协议头长度、协议体长度，方便数据处理 |
+| 缺点     | 一般来说，应用通讯协议内容长度不固定，自适应能力差，会存在浪费 | 用户数据不能包含特殊结束符，否则可能㐀成通讯紊乱，且需要读取所有数据包后才能进行处理 |                                                              |
+
+
+
+#### Dubbo 通讯协议格式
+
+![1611313590010](ArchitectureAdvanced.assets/1611313590010.png)
+
+
+
+#### Dubbo 通讯协议程序
+
+- https://github.com/apache/dubbo
+- org.apache.dubbo.remoting.exchange.codec.ExchangeCodec
+
+```java
+		@Override
+    public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        int readable = buffer.readableBytes();
+        byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
+        buffer.readBytes(header);
+        return decode(channel, buffer, readable, header);
+    }
+
+    @Override
+    protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
+        // check magic number.
+        if (readable > 0 && header[0] != MAGIC_HIGH
+                || readable > 1 && header[1] != MAGIC_LOW) {
+            int length = header.length;
+            if (header.length < readable) {
+                header = Bytes.copyOf(header, readable);
+                buffer.readBytes(header, length, readable - length);
+            }
+            for (int i = 1; i < header.length - 1; i++) {
+                if (header[i] == MAGIC_HIGH && header[i + 1] == MAGIC_LOW) {
+                    buffer.readerIndex(buffer.readerIndex() - header.length + i);
+                    header = Bytes.copyOf(header, i);
+                    break;
+                }
+            }
+            return super.decode(channel, buffer, readable, header);
+        }
+        // check length.
+        if (readable < HEADER_LENGTH) {
+            return DecodeResult.NEED_MORE_INPUT;
+        }
+
+        // get data length.
+        int len = Bytes.bytes2int(header, 12);
+        checkPayload(channel, len);
+
+        int tt = len + HEADER_LENGTH;
+        if (readable < tt) {
+            return DecodeResult.NEED_MORE_INPUT;
+        }
+
+        // limit input stream.
+        ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
+
+        try {
+            return decodeBody(channel, is, header);
+        } finally {
+            if (is.available() > 0) {
+                try {
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("Skip input stream " + is.available());
+                    }
+                    StreamUtils.skipUnusedStream(is);
+                } catch (IOException e) {
+                    logger.warn(e.getMessage(), e);
+                }
+            }
+        }
+    }
+```
+
+
+
+#### Dubbo 通讯协议程序 - 解码 Responce 对象
+
+- org.apache.dubbo.rpc.protocol.dubbo.DubboCodec
+
+```java
+@Override
+protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
+    byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
+    // get request id.
+    long id = Bytes.bytes2long(header, 4);
+    if ((flag & FLAG_REQUEST) == 0) {
+        // decode response.
+        Response res = new Response(id);
+        if ((flag & FLAG_EVENT) != 0) {
+            res.setEvent(true);
+        }
+        // get status.
+        byte status = header[3];
+        res.setStatus(status);
+        try {
+            if (status == Response.OK) {
+                Object data;
+                if (res.isEvent()) {
+                    ObjectInput in = CodecSupport.deserialize(channel.getUrl(), is, proto);
+                    data = decodeEventData(channel, in);
+                } else {
+                    DecodeableRpcResult result;
+                    if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
+                        result = new DecodeableRpcResult(channel, res, is,
+                                (Invocation) getRequestData(id), proto);
+                        result.decode();
+                    } else {
+                        result = new DecodeableRpcResult(channel, res,
+                                new UnsafeByteArrayInputStream(readMessageData(is)),
+                                (Invocation) getRequestData(id), proto);
+                    }
+                    data = result;
+                }
+                res.setResult(data);
+            } else {
+                ObjectInput in = CodecSupport.deserialize(channel.getUrl(), is, proto);
+                res.setErrorMessage(in.readUTF());
+            }
+        } catch (Throwable t) {
+            if (log.isWarnEnabled()) {
+                log.warn("Decode response failed: " + t.getMessage(), t);
+            }
+            res.setStatus(Response.CLIENT_ERROR);
+            res.setErrorMessage(StringUtils.toString(t));
+        }
+        return res;
+    } else {
+        // decode request.
+        // ....
+    }
+```
+
+
+
+#### Dubbo 通讯协议程序 - 解码 Request 对象
+
+```java
+// decode response.
+// ....
+} else {
+        // decode request.
+        Request req = new Request(id);
+        req.setVersion(Version.getProtocolVersion());
+        req.setTwoWay((flag & FLAG_TWOWAY) != 0);
+        if ((flag & FLAG_EVENT) != 0) {
+            req.setEvent(true);
+        }
+        try {
+            Object data;
+            if (req.isEvent()) {
+                ObjectInput in = CodecSupport.deserialize(channel.getUrl(), is, proto);
+                data = decodeEventData(channel, in);
+            } else {
+                DecodeableRpcInvocation inv;
+                if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
+                    inv = new DecodeableRpcInvocation(channel, req, is, proto);
+                    inv.decode();
+                } else {
+                    inv = new DecodeableRpcInvocation(channel, req,
+                            new UnsafeByteArrayInputStream(readMessageData(is)), proto);
+                }
+                data = inv;
+            }
+            req.setData(data);
+        } catch (Throwable t) {
+            if (log.isWarnEnabled()) {
+                log.warn("Decode request failed: " + t.getMessage(), t);
+            }
+            // bad request
+            req.setBroken(true);
+            req.setData(t);
+        }
+
+        return req;
+    }
+}
+```
+
+
+
+#### Dubbo 利用 requestId 避免队头阻塞
+
+- requestld: 请求ID,该字段主要用于异步请求时,保留请求存根使用,便于响应回来时触发回调。
+- 另外,在日志打印与问题调试时,也需要该字段。
+- org.apache.dubbo.remoting.exchange.support.DefaultFuture
+
+![1611314836450](ArchitectureAdvanced.assets/1611314836450.png)
+
+
+
+#### SOFA-RPC 通讯协议（Bolt 协议）
+
+- 请求命令
+- 响应命令
+
+![1611314889910](ArchitectureAdvanced.assets/1611314889910.png)
+
+![1611314936777](ArchitectureAdvanced.assets/1611314936777.png)
+
+
+
+#### SOFA-RPC 通讯协议程序 
+
+- com.alipay.remoting.rpc.protocol.RpcCommandEncoderV2
+
+```java
+/**
+ * Encode remoting command into ByteBuf v2.
+ * 
+ * @author jiangping
+ * @version $Id: RpcCommandEncoderV2.java, v 0.1 2017-05-27 PM8:11:27 tao Exp $
+ */
+public class RpcCommandEncoderV2 implements CommandEncoder {
+    /** logger */
+    private static final Logger logger = LoggerFactory.getLogger("RpcRemoting");
+
+    /**
+     * @see CommandEncoder#encode(ChannelHandlerContext, Serializable, ByteBuf)
+     */
+    @Override
+    public void encode(ChannelHandlerContext ctx, Serializable msg, ByteBuf out) throws Exception {
+        try {
+            if (msg instanceof RpcCommand) {
+                /*
+                 * proto: magic code for protocol
+                 * ver: version for protocol
+                 * type: request/response/request oneway
+                 * cmdcode: code for remoting command
+                 * ver2:version for remoting command
+                 * requestId: id of request
+                 * codec: code for codec
+                 * switch: function switch
+                 * (req)timeout: request timeout.
+                 * (resp)respStatus: response status
+                 * classLen: length of request or response class name
+                 * headerLen: length of header
+                 * cotentLen: length of content
+                 * className
+                 * header
+                 * content
+                 * crc (optional)
+                 */
+                int index = out.writerIndex();
+                RpcCommand cmd = (RpcCommand) msg;
+                out.writeByte(RpcProtocolV2.PROTOCOL_CODE);
+                Attribute<Byte> version = ctx.channel().attr(Connection.VERSION);
+                byte ver = RpcProtocolV2.PROTOCOL_VERSION_1;
+                if (version != null && version.get() != null) {
+                    ver = version.get();
+                }
+                out.writeByte(ver);
+                out.writeByte(cmd.getType());
+                out.writeShort(((RpcCommand) msg).getCmdCode().value());
+                out.writeByte(cmd.getVersion());
+                out.writeInt(cmd.getId());
+                out.writeByte(cmd.getSerializer());
+                out.writeByte(cmd.getProtocolSwitch().toByte());
+                if (cmd instanceof RequestCommand) {
+                    //timeout
+                    out.writeInt(((RequestCommand) cmd).getTimeout());
+                }
+                if (cmd instanceof ResponseCommand) {
+                    //response status
+                    ResponseCommand response = (ResponseCommand) cmd;
+                    out.writeShort(response.getResponseStatus().getValue());
+                }
+                out.writeShort(cmd.getClazzLength());
+                out.writeShort(cmd.getHeaderLength());
+                out.writeInt(cmd.getContentLength());
+                if (cmd.getClazzLength() > 0) {
+                    out.writeBytes(cmd.getClazz());
+                }
+                if (cmd.getHeaderLength() > 0) {
+                    out.writeBytes(cmd.getHeader());
+                }
+                if (cmd.getContentLength() > 0) {
+                    out.writeBytes(cmd.getContent());
+                }
+                if (ver == RpcProtocolV2.PROTOCOL_VERSION_2
+                    && cmd.getProtocolSwitch().isOn(ProtocolSwitch.CRC_SWITCH_INDEX)) {
+                    // compute the crc32 and write to out
+                    byte[] frame = new byte[out.readableBytes()];
+                    out.getBytes(index, frame);
+                    out.writeInt(CrcUtil.crc32(frame));
+                }
+            } else {
+                String warnMsg = "msg type [" + msg.getClass() + "] is not subclass of RpcCommand";
+                logger.warn(warnMsg);
+            }
+        } catch (Exception e) {
+            logger.error("Exception caught!", e);
+            throw e;
+        }
+    }
+}
+```
+
+
+
+#### 序列化协议
+
+|          | 优点                    | 缺点                                       |
+| -------- | ----------------------- | ------------------------------------------ |
+| Kryo     | 速度快，序列化后体积小  | 跨平台支持较为复杂                         |
+| Hessian  | 默认支持跨平台          | 较慢                                       |
+| Protobuf | 速度快，序列化后体积小  | 需要静态编译                               |
+| Java     | Java 原生支持，使用方便 | 速度慢，序列化后体积较大                   |
+| FST      | 速度快，序列化后体积小  | 不支持跨平台                               |
+| JSON     | 使用方便                | 不同平台的实现性能差别较大，可靠性有待提高 |
+
+
+
+
+
+### 微服务网关
+
+#### 基于网关的微服务架构
+
+- API Gateway
+
+![1611315418278](ArchitectureAdvanced.assets/1611315418278.png)
+
+
+
+#### 网关作用
+
+- 统一接入
+- 流量管控与容错
+- 协议适配
+- 安全防护
+
+![1611315431914](ArchitectureAdvanced.assets/1611315431914.png)
+
+
+
+#### 微服务网关
+
+![1611315524986](ArchitectureAdvanced.assets/1611315524986.png)
+
+
+
+#### 网关管道技术
+
+网关本身没有什么业务，主要职责是做各种校验与拦截，这些职责可以通过管道技术连接起来。
+
+![1611315615065](ArchitectureAdvanced.assets/1611315615065.png)
+
+实现管道技术的责任链设计模式
+
+![1611315631120](ArchitectureAdvanced.assets/1611315631120.png)
+
+
+
+#### Flower 异步网关与异步微服务框架
+
+![1609080524832](ArchitectureAdvanced.assets/1609080524832.png)
+
+利用 Servlet 3 实现异步网关
+
+```java
+// com.ly.train.flower.web.spring.FlowerController#doProcess
+  protected void doProcess(Object param, HttpServletRequest req) {
+    AsyncContext context = null;
+    if (req != null) {
+      context = req.startAsync();
+    }
+    this.flowRouter.asyncCallService(param, context);
+  }
+
+// com.ly.train.flower.common.core.web.Web
+public class Web {
+  public Web(AsyncContext context) {
+    this.asyncContext = context;
+    this.servletRequest = context.getRequest();
+    this.servletResponse = context.getResponse();
+    servletResponse.setCharacterEncoding(Constant.ENCODING_UTF_8);
+    try {
+      this.writer = servletResponse.getWriter();
+    } catch (IOException e) {
+      logger.error("", e);
+    }
+  }
+
+  public void print(String message) {
+    writer.print(message);
+  }
+```
+
+
+
+#### 开放平台网关
+
+- 提供给第三方调用的API
+- 可以免费，也可以收费提供服务
+
+API接口：是开放平台暴露给合作者使用的一组API，其形式可以是RESTful、 WebService、RPC等各种形式
+
+协议转换：将各种 API输入转换成内部服务可以识别的形式，并将内部服务的返回封装成API的格式。
+
+安全：除了一般应用需要的身份识别、权限控制等安全手段，开放平台还需要分级的访问带宽限制，保证平台资源被第三方应用公平合理使用，也保护网站内部服务不会被外部应用拖垮。
+
+审计：记录第三方应用的访问情况，并进行监控、计费等。
+
+路由：将开放平台的各种访问路由映射到具体的内部服务。
+
+流程：将一组离散的服务组织成一个上下文相关的新服务，隐藏服务细节，提供统一接口供开发者调用。
+
+![1611316265303](ArchitectureAdvanced.assets/1611316265303.png)
+
+
+
+#### 开放授权协议（OAuth 2.0）
+
+![1611316336809](ArchitectureAdvanced.assets/1611316336809.png)
+
+
+
+#### 授权码授权
+
+OAuth2.0一共有四种授权方式，分别是授权码、隐式授权、资源所有者密码凭据和客户端凭据。
+
+目前互联网上使用最多也是最安全的的一种方式是授权码方式。
+
+证明用户的凭证 token，叫做令牌。
+
+![1611316376180](ArchitectureAdvanced.assets/1611316376180.png)
+
+
+
+
+
+### 领域驱动设计
+
+#### 领域模型
+
+##### 为什么需要DDD
+
+很多项目的实际情况                              
+
+- 用户或者产品经理的需求零零散散,不断变更。    
+- 工程师在各处代码中寻找可以实现这些需求变更的代码,修修补补。  
+- 软件只有需求分析,并没有真正的设计,系统没有一个统一的领域模型维持其内在的逻辑一致性。  
+- 功能特性并不是按照领域模型内在的逻辑设计,而是按照各色人等自己的主观想象设计。
+
+项目时间一长,各种困难重重,需求不断延期,线上bug不断,管理者考虑是不是要推倒重来,而程序员则考虑是不是要跑路。
+
+
+
+##### 事务脚本
+
+- Controller
+- Service
+- Dao
+
+![1611316633382](ArchitectureAdvanced.assets/1611316633382.png)
+
+
+
+##### 领域模型
+
+![1611316647339](ArchitectureAdvanced.assets/1611316647339.png)
+
+
+
+##### 贫血模型 vs 充血模型
+
+由于事务脚本模式中, Service、Dao这些对象只有方法,没有数值成员变量,而方法调用时传递的数值对象,比如 Contract,没有方法(或者只有一些 getter、 setter方法)  , 因此事务脚本又被称作贫血模型。        
+
+领域模型的对象则包含了对象的数据和计算逻辑,比如合同对象,既包含合同数据,也包含合同相关的计算。因此从面向对象的角度看,领域模型才是真正的面向对象。收入确认是和合同强相关的, 是合同对象的一个职责, 那么合同对象就应该提供一个 calculateRecognition方法计算收入。        
+
+领域模型是合并了行为和数据的领域的对象模型。通过领域模型对象的交互完成业务逻辑的实现,也就是说,设计好了领域模型对象,也就设计好了业务逻辑实现。和事务脚本被称作贫血模型相对应的,领域模型也被称为充血模型。
+
+
+
+#### DDD 战略设计
+
+##### 领域是什么
+
+领域是一个组织所做的事情以及其包含的一切,通俗地说,就是组织的业务范围和做事方式,也是软件开发的目标范围。        
+
+领域驱动设计就是从领域出发,分析领域内模型及其关系,进而设计软件系统的方法
+
+![1611317066964](ArchitectureAdvanced.assets/1611317066964.png)
+
+
+
+##### 子域
+
+领域是一个组织所做的事情以及其包含的一切。这个范围就太大了,不知道该如何下手。  所以通常的做法是把整个领域拆分成多个子域, 比如用户、商品、订单、库存、物流、发票等。        
+
+如何划分子域?    
+
+卖家提现功能是属于用户子域? 订单子域? 财务子域? 还是直接设计一个提现子域?
+
+
+
+##### 限界上下文
+
+在一个子域中, 会创建一个概念上的领域边界, 在这个边界中,任何领域对象都只表示特定于该边界内部的确切含义。这样边界便称为限界上下文。
+
+限界上下文和子域具有一对一的关系,用来控制子域的边界。        
+
+通常限界上下文对应一个组件或者一个模块,或者一个微服务。
+
+
+
+##### 上下文映射图
+
+不同的界限上下文，也就是不同的子系统或者模块之间会有各种的交互合作。DDD使用上下文映射图来设计这种交互。
+
+![1611317302378](ArchitectureAdvanced.assets/1611317302378.png)
+
+
+
+#### DDD 战术设计
+
+##### 实体
+
+领域模型对象也被称为实体,每个实体都是唯一的,具有一个唯一标识,一个订单对象是一个实体,一个产品对象也是一个实体,订单ID或者产品ID是它们的唯一标识。
+
+实体可能会发生变化,比如订单的状态会变化,但是它们的唯一标识不会变化。        
+
+实体设计是DDD的核心所在,首先通过业务分析,识别出实体对象,然后通过相关的业务逻辑设计实体的属性和方法。这里最重要的,是要把握住实体的特征是什么,实体应该承担什么职责,不应该承担什么职责,分析的时候要放在业务场景和界限上下文中,  而不是想当然地认为这样的实体就应该承担这样的角色。
+
+
+
+##### 值对象
+
+并不是领域内的对象都应该被设计为实体，DDD推荐尽可能将对象设计为值对象。比如像住址这样的对象就是典型的值对象，也许建在住址上的房子可以被当做一个实体，但是住址仅仅是对房子的一个描述，像这样仅仅用来做度量或描述的对象应该被设计为值对象。
+
+值对象的一个特点是不变性，一个值对象创建以后就不能再改变了。如果地址改变了，那就是一个新地址，而一个订单实体则可能会经历创建、待支付、已支付、代发货、已发货、待签收、待评价等各种变化。
+
+
+
+##### 聚合
+
+聚合是一个关联对象的集合,我们将其作为一个单元来处理数据更改。每个集合都有一个根和一个边界。
+
+边界定义了聚合内部的内容。根是聚合中包含的单个特定实体。    
+
+聚合根: 将多个实体和值对象聚合在一起的实体。
+
+![1611320683840](ArchitectureAdvanced.assets/1611320683840.png)
+
+
+
+##### DDD 分层架构
+
+领域实体的组合调用和事务控制在应用层。
+
+![1611320707680](ArchitectureAdvanced.assets/1611320707680.png)
+
+
+
+##### DDD 六边形架构
+
+领域模型通过应用程序封装成一个相对比较独立的模块, 而不同的外部系统则通过不同的适配器和领域模型交互,比如可以通过HTTP接口访问领域模型,也可以通过 Web Service或者消息队列访问领域模型, 只需要为这些不同的访问接口提供不同的适配器就可以了。
+
+![1611322695037](ArchitectureAdvanced.assets/1611322695037.png)
+
+
+
+#### DDD 战略设计与战术设计
+
+领域、子域、界限上下文、上下文映射图，这些是DDD的战略设计。
+
+实体、值对象、聚合、CQRS、事件溯源，这些是DDD战术设计。
+
+通过战略设计，划分模块和服务的边界及依赖关系，对微服务架构的设计至关重要。
+
+
+
+#### 我经历的一个 DDD 重构实践过程
+
+当前系统设计与问题汇总讨论      
+
+- 架构与代码混乱,需求迭代困难,部署麻烦,bug率逐渐升高
+
+针对问题分析具体原因        
+
+- 子系统A太庞大,模块B和C职责不清,业务理解不一致
+
+重新梳理业务规则和边界,明确业务术语      
+
+- DDD战略设计,领域建模
+
+技术框架选型与落地方案验证      
+
+- DDD战术设计,样例代码
+
+任务分解与持续重构
+
+- 在不影响业务开发的前提下,按照战略与战术设计,将重构开发和业务迭代有机融合
+
+如果一个工作多年的程序员，还是仅仅写一些跟他工作第一年差不多的CRUD代码。那么他迟早会遇到自己的职业危机。公司必然愿意用更年轻、更努力，当然也更低薪水的程序员来代替他。至于学习新技术的能力，其实多年工作经验也并没有太多帮助，有时候也许还是劣势。
+
+资深程序员真正有优势的是他在一个业务领域的多年积淀，对业务领域有更深刻的理解和认知。那么如何将这些业务沉淀和理解反映到工作中，体现在代码中呢？实践DDD是一个不错的方式。
+
+如果一个人有多年的领域经验，那么必然对领域模型设计有更深刻的认识，把握好领域模型在不断的需求变更中的演进，使系统维持更好的活力，并因此体现自己真正的价值。
+
+
+
+
+
+### 组件设计原则
+
+#### 软件组件起源
+
+在没有变成语言的时候就已经有了软件组件
+
+![1611322998912](ArchitectureAdvanced.assets/1611322998912.png)
+
+
+
+#### 软件的复杂度和它的规模成指数关系
+
+一个复杂度为100的软件系统,如果能拆分成两个互不相关、同等规模的子系统,那么每个子系统的复杂度应该是25,而不是50。
+
+软件开发这个行业很久之前就形成了一个共识,应该将复杂的软件系统进行拆分,拆成多个更低复杂度的子系统,子系统还可以 继续拆分成更小粒度的组件。也就是说,软件需要进行模块化、组件化设计。
+
+
+
+#### 组件内聚原则
+
+组件内聚原则主要讨论哪些类应该聚合在同一个组件中,以便组件既能提供相对完整的功能,又不至于太过庞大。        
+
+- 复用发布等同原则    
+- 共同封闭原则    
+- 共同复用原则
+
+
+
+##### 复用发布等同原则
+
+复用发布等同原则是说,软件复用的最小粒度应该等同于其发布的最小粒度。也就是说如果你希望别人以怎样的粒度复用你的软件,你就应该以怎样的粒度发布你的软件。这其实就是组件的定义了,组件是软件复用和发布的最小粒度软件单元。这个粒度既是复用的粒度,也是发布的粒度。
+
+版本号约定建议
+
+- 版本号格式:主版本号.次版本号修订号。比如1.3.12, 在这个版本号中,主版本号是1,  次版本号是3,修订号是12。  
+- 主版本号升级,表示组件发生了不向前兼容的重大修订;    
+- 次版本号升级,表示组件进行了重要的功能修订或者bug修复,但是组件是向前兼容的;  
+- 修订号升级,表示组件进行了不重要的功能修订或者bug修复。
+
+
+
+##### 共同封闭原则
+
+共同封闭原则是说,我们应该将那些会同时修改,并且为了相同目的而修改的类放到同一个组件中。而将不会同时修改,并且不会为了相同目的而修改的类放到不同的组件中。        
+
+组件的目的虽然是为了复用,然而开发中常常引发问题的,恰恰在于组件本身的可维护性。如果组件在自己的生命周期中必须经历各种变更,那么最好不要涉及其他组件,相关的变更都在同一个组件中。这样,当变更发生的时候,只需要重新发布这个组件就可以了,而不是一大堆组件都受到牵连。
+
+
+
+##### 共同复用原则
+
+共同复用原则是说,不要强迫一个组件的用户依赖他们不需要的东西。        
+
+这个原则一方面是说,我们应该将互相依赖,共同复用的类放在一个组件中。比如说，一个数据结构容器组件,提供数组、Hash表等各种数据结构容器,那么对数据结构遍历的类、排序的类也应该放在这个组件中,以使这个组件中的类共同对外提供服务。    
+
+另一方面,这个原则也说明,如果不是被共同依赖的类,就不应该放在同一个组件中。  如果不被依赖的类发生变更,就会引起组件变更,进而引起使用组件的程序发生变更。  这样就会导致组件的使用者产生不必要的困扰,甚至讨厌使用这样的组件,也造成了组件复用的困难。
+
+
+
+#### 组件耦合原则
+
+组件内聚原则讨论的是组件应该包含哪些功能和类,而组件耦合原则讨论组件之间的耦合关系应该如何设计。            
+
+- 无循环依赖原则    
+- 稳定依赖原则    
+- 稳定抽象原则
+
+
+
+##### 无循环依赖原则
+
+无循环依赖原则说，组件依赖关系中不应该出现环。如果组件A依赖组件B，组件B依赖组件C，组件C又依赖组件A，就形成了循环依赖。
+
+很多时候，循环依赖是在组件的变更过程中逐渐形成的，组件A版本1.0依赖组件B版本1.0，后来组件B升级到1.1，升级的某个功能依赖组件A的1.0版本，于是形成了循环依赖。
+
+如果组件设计的边界不清晰，组件开发设计缺乏评审，开发者只关注自己开发的组件，整个项目对组件依赖管理没有统一的规则，很有可能出现循环依赖。
+
+
+
+##### 稳定依赖原则
+
+稳定依赖原则说,组件依赖关系必须指向更稳定的方向。很少有变更的组件是稳定的,  也就是说,经常变更的组件是不稳定的。根据稳定依赖原则,不稳定的组件应该依赖稳  定的组件,而不是反过来。        
+
+反过来说,如果一个组件被更多组件依赖,那么它需要相对是稳定的,因为想要变更一个被很多组件依赖的组件,本身就是一件困难的事。相对应的,如果一个组件依赖了很多的组件,那么它相对也是不稳定的,因为它依赖的任何组件变更,都可能导致自己的变更。      
+
+稳定依赖原则通俗地说就是,组件不应该依赖一个比自己还不稳定的组件。
+
+
+
+##### 稳定抽象原则
+
+稳定抽象原则说,一个组件的抽象化程度应该与其稳定性程度一致。也就是说,一个稳定的组件应该是抽象的,而不稳定的组件应该是具体的。        
+
+这个原则对具体开发的指导意义就是:如果你设计的组件是具体的、不稳定的,那么可以为这个组件对外提供服务的类设计一组接口,并把这组接口封装在一个专门的组件中,  那么这个组件相对就比较抽象、稳定。        
+
+Java中的JDBC就是这样一个例子,我们开发应用程序的时候只需要使用JDBC的接口编程就可以了。而发布应用的时候,我们指定具体的实现组件,可以是 MySQL实现的JDBC组件,也可以是 Oracle实现的JDBC组件。
+
+
+
+#### 组件的边界与依赖关系，不仅仅是技术问题
+
+组件的边界与依赖关系划分，不仅需要考虑技术问题，也要考虑业务场景问题。易变与稳定，依赖与被依赖，都需要放在业务场景中去考察。
+
+有的时候，甚至不只是技术和业务的问题，还需要考虑人的问题，在一个复杂的组织中，组件的依赖与设计需要考虑人的因素，如果组件的功能划分涉及到部门的职责边界，甚至会和公司内的政治关联起来。
+
+
+
+### 作业与实践
+
+- 关于微服务架构（中台架构，领域驱动设计，组件设计原则），你有什么样的思考和认识？
+- 根据微服务框架 Dubbo 的架构图，画出 Dubbo 进行一次微服务调用的时序图。
+
+![1611233460142](ArchitectureAdvanced.assets/1611233460142.png)
+
+
+
+
+
+### 安全架构
 
 
 
