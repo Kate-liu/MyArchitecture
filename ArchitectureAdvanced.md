@@ -12282,6 +12282,243 @@ Task由TP监控,失败任务多次尝试,慢任务启动备份任务
 
 
 
+### Yarn
+
+#### YARN：Yet Another Resource Negotiator
+
+下一代 MapReduce 框架的名称。
+
+不再是一个传统的 MapReduce 框架，甚至与 MapReduce 无关。
+
+一个通用的运行时框架，用户可以编写自己的计算框架，在该运行环境中运行。
+
+MapReduce 的架构，在MapReduce 应用程序的启动过程中，最重要的就是要把 MapReduce 程序分发到大数据集群的服务器上，在Hadoop1中，这个过程主要是通过 TaskTracker和 JobTracker通信来完成。
+
+这种架构方案的主要缺点是，服务器集群资源调度管理和 MapReduce执行过程耦合在一起，如果想在当前集群中运行其他计算任务，比如 Spark或者Storm，就无法统一使用集群中的资源了。
+
+在 Hadoop早期的时候, 大数据技术就只有 Hadoop一家,这个缺点并不明显。但随着大数据技术的发展, 各种新的计算框架不断出现,我们不可能为每一种计算框架部署个服务器集群, 而且就算能部署新集群, 数据还是在原来集群的HDFS上。
+
+所以我们需要把 MapReduce的资源管理和计算框架分开, 这也是 Hadoop 2最主要的变化, 就是将 Yarn从 MapReduce 中分离出来,成为一个独立的资源调度框架。 
+
+MRv2 最基本的设计思想是将 JobTracker 的两个主要功能, 即资源管理和作业管理分成两个独立的进程。
+
+- 在该解决方案中包含两个组件: 全局的 ResourceManager(RM) 和与每个应用相关的  ApplicationMaster (AM)      
+- 这里的“应用”指一个单独的MapReduce作业或者DAG作业
+                    
+
+
+
+#### Yarn 架构
+
+![1611665059107](ArchitectureAdvanced.assets/1611665059107.png)
+
+Yarn包括两个部分:       
+
+一个是资源管理器(Resource Manager), 一个是节点管理器( Node Manager)。        
+
+这也是 Yarn的两种主要进程:  ResourceManager 进程负责整个集群的资源调度管理,  通常部署在独立的服务器上; NodeManager 进程负责具体服务器上的资源和任务管理,  在集群的每一台计算服务器上都会启动, 基本上跟HDFS 的 DataNode进程一起出现。
+
+资源管理器又包括两个主要组件：调度器和应用程序管理器。
+
+调度器其实就是一个资源分配算法，根据应用程序（Client) 提交的资源申请和当前服务器集群的资源状况进行资源分配。Yarn内置了几种资源调度算法，包括Fair Scheduler、Capacity Scheduler等，你也可以开发自己的资源调度算法供Yarn调用。
+
+Yarn 进行资源分配的单位是容器（Container)，每个容器包含了一定量的内存、CPU等计算资源，默认配置下，每个容器包含一个CPU核心。容器由NodeManager 进程启动和管理，NodeManger 进程会监控本节点上容器的运行状况并向 ResourceManger进程汇报。
+
+应用程序管理器负责应用程序的提交、监控应用程序运行状态等。应用程序启动后需要在集群中运行一个 ApplicationMaster, ApplicationMaster 也需要运行在容器里面。每个应用程序启动后都会先启动自己的 ApplicationMaster,由 ApplicationMaster根据应用程序的资源需求进一步向 ResourceManager进程申请容器资源,得到容器以后就会分发自己的应用程序代码到容器上启动,进而开始分布式计算。
+
+
+
+#### Yarn的工作流程 (Map Reduce为例)        
+
+我们向Yarn提交应用程序,包括 MapReduce ApplicationMaster、我们的 MapReduce  程序,以及 Map Reduce Application启动命令。    
+
+ResourceManager进程和 NodeManage进程通信,根据集群资源,为用户程序分配第一个容器,并将 MapReduce ApplicationMaster 分发到这个容器上面,并在容器里面启 Map Reduce ApplicationMaster.    
+
+MapReduce ApplicationMaster启动后立即向 ResourceManager进程注册,并为自己的应用程序申请容器资源。   
+
+MapReduce ApplicationMaster申请到需要的容器后,立即和相应的 NodeManager进程通信,将用户 MapReduce程序分发到 NodeManager进程所在服务器,并在容器中运行,运行的就是Map或者 Reduce任务。    
+
+Map或者 Reduce任务在运行期和 Map Reduce ApplicationMaster 通信,汇报自己的运行状态,如果运行结束, MapReduce ApplicationMaster ResourceManager进程注销并释放所有的容器资源。
+
+
+
+#### 资源管理器 HA
+
+- ZooKeeper
+
+![1611665769409](ArchitectureAdvanced.assets/1611665769409.png)
+
+
+
+
+
+### Hive
+
+#### SQL 与 MapReduce
+
+- Map
+- Shuffle
+- Reduce
+
+![1611665891359](ArchitectureAdvanced.assets/1611665891359.png)
+
+![1611665911595](ArchitectureAdvanced.assets/1611665911595.png)
+
+![1611665931303](ArchitectureAdvanced.assets/1611665931303.png)
+
+
+
+#### Hive 语句
+
+```sh
+hive> CREATE TABLE pokes (foo INT, bar STRING);
+
+hive> SHOW TABLES;
+
+hive> ALTER TABLE pokes ADD COLUMNS (new_col INT);
+
+hive> DROP TABLE pokes;
+
+hive> LOAD DATA LOCAL INPATH './examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;  -- 本地文件与 hive table 相关联
+
+hive> SELECT a.foo FROM invites a WHERE a.ds='2008-08-15';
+```
+
+
+
+#### Hive 架构
+
+![1611666173234](ArchitectureAdvanced.assets/1611666173234.png)
+
+![1611666208281](ArchitectureAdvanced.assets/1611666208281.png)
+
+
+
+#### Hive 执行流程        
+
+- 操作符(Operator) 是Hive的最小处理单元    
+- 每个操作符处理代表 HDFS操作或MR作业    
+- 编译器把Hive SQL转换成一组操作符
+
+![1611666335492](ArchitectureAdvanced.assets/1611666335492.png)
+
+
+
+#### Hive 编译器
+
+![1611666348453](ArchitectureAdvanced.assets/1611666348453.png)
+
+![1611666390487](ArchitectureAdvanced.assets/1611666390487.png)
+
+![1611666410103](ArchitectureAdvanced.assets/1611666410103.png)
+
+
+
+
+
+#### Example Query (Filter)
+
+Filter status updates containing ‘michael jackson’
+
+- SELECT * FROM status_updates WHERE status LIKE ‘michael jackson’
+
+![1611666497411](ArchitectureAdvanced.assets/1611666497411.png)
+
+
+
+#### Example Query (Aggregation)
+
+Figure out total number of status_updates in a given day
+
+- SELECT COUNT(1) FROM status_updates WHERE ds = ’2009-08-01’
+
+![1611666574900](ArchitectureAdvanced.assets/1611666574900.png)
+
+
+
+#### Example Query (multi-group-by)
+
+```sql
+FROM (SELECT a.status, b.school, b.gender
+    FROM status_updates a 
+      	JOIN profiles b
+    		ON (a.userid = b.userid and a.ds='2009-03-20' )
+		) subq1
+
+INSERT OVERWRITE TABLE gender_summary PARTITION(ds='2009-03-20')
+
+SELECT subq1.gender, COUNT(1) GROUP BY subq1.gender
+
+INSERT OVERWRITE TABLE school_summary PARTITION(ds='2009-03-20')
+
+SELECT subq1.school, COUNT(1) GROUP BY subq1.school
+```
+
+![1611666774054](ArchitectureAdvanced.assets/1611666774054.png)
+
+
+
+### Hive Metastore
+
+#### Single User Mode (Default)
+
+![1611666894760](ArchitectureAdvanced.assets/1611666894760.png)
+
+
+
+#### Multi User Mode
+
+![1611666955810](ArchitectureAdvanced.assets/1611666955810.png)
+
+
+
+#### Remote Server
+
+![1611667020964](ArchitectureAdvanced.assets/1611667020964.png)
+
+
+
+#### Hive QL – Join
+
+```sql
+INSERT OVERWRITE TABLE pv_users
+
+SELECT pv.pageid, u.age FROM page_view pv
+		JOIN user u
+		ON (pv.userid = u.userid);
+```
+
+
+
+#### Hive QL – Join in Map Reduce
+
+![1611667357342](ArchitectureAdvanced.assets/1611667357342.png)
+
+
+
+#### Join Optimizations
+
+Map Joins
+
+- User specified small tables stored in hash tables on the mapper backed by jdbm
+- No reducer needed
+
+```sql
+INSERT INTO TABLE pv_users
+
+SELECT /*+ MAPJOIN(pv) */ pv.pageid, u.age FROM page_view pv 
+		JOIN user u
+		ON (pv.userid = u.userid);
+```
+
+
+
+#### Hive QL – Map Join
+
+![1611667503169](ArchitectureAdvanced.assets/1611667503169.png)
+
+
+
 
 
 
