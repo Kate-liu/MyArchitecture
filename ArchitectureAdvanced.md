@@ -11469,7 +11469,10 @@ ModSecurity 采用处理逻辑与规则集合分离的架构模式。处理逻�
 ![1611410651179](ArchitectureAdvanced.assets/1611410651179.png)
 
 - 答案：
-- 
+-  [Main.java](UserPasswordValidateFunc/src/main/java/org/copdays/rmliu/Main.java)
+- [PasswordUtils.java](UserPasswordValidateFunc/src/main/java/org/copdays/rmliu/PasswordUtils.java)
+- [PasswordUtilsGo.go](UserPasswordValidateFunc/src/main/java/org/copdays/rmliu/PasswordUtilsGo.go)
+- [PasswordUtilsPHP.php](UserPasswordValidateFunc/src/main/java/org/copdays/rmliu/PasswordUtilsPHP.php)
 
 
 
