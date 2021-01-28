@@ -12589,7 +12589,9 @@ page_view 表 和 user 表结构与数据示例如下。
 
 
 
+### Cloudera Impala
 
+- [Cloudera Impala](Data/Cloudera Impala.pptx)
 
 
 
