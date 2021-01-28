@@ -5064,19 +5064,19 @@ Office 的产品版本以年为单位发布，而一般大型网站的产品每�
 
 ### 淘宝业务发展及技术架构
 
-参考：[淘宝业务发展及技术架构](Data/taobao.pdf)
+参考：[淘宝业务发展及技术架构](Data/淘宝业务发展及技术架构.pdf)
 
 
 
 ### 宅米网技术变迁 - 橱窗互联网公司的技术发展之路
 
-参考：[宅米网技术变迁](Data/zhaimiNet.pdf)
+参考：[宅米网技术变迁](Data/宅米网技术变迁-初创互联网公司的技术发展之路.pdf)
 
 
 
 ### 微博架构与平台安全
 
-参考：[微博架构与平台安全](Data/weibo.pdf)
+参考：[微博架构与平台安全](Data/微博架构与平台安全.pdf)
 
 
 
@@ -6072,6 +6072,12 @@ Web应用中将这些状态信息称作会话（Session），单机情况下， 
 
 
 ### Doris – 海量 KV Engine
+
+#### 参考资料
+
+- [海量分布式存储系统Doris的高可用架构设计分析](Data/海量分布式存储系统Doris的高可用架构设计分析.pdf)
+
+
 
 #### 当前现状
 
@@ -10558,6 +10564,22 @@ Java中的JDBC就是这样一个例子,我们开发应用程序的时候只需�
 
 
 
+
+
+### 逻辑思维DDD战略建模-在重构业务系统时的实践
+
+- [逻辑思维DDD战略建模-在重构业务系统时的实践](Data/逻辑思维DDD战略建模-在重构业务系统时的实践.pdf)
+
+
+
+### 从应用到中台-业务平台的演进
+
+- [从应用到中台-业务平台的演进](Data/从应用到中台-业务平台的演进.pdf)
+
+
+
+
+
 ### 作业与实践
 
 - 关于微服务架构（中台架构，领域驱动设计，组件设计原则），你有什么样的思考和认识？
@@ -11479,28 +11501,6 @@ ModSecurity 采用处理逻辑与规则集合分离的架构模式。处理逻�
 
 
 ## 大数据系统架构
-
-
-
-### 作业与实践
-
-1.在你所在的公司（行业，领域），正在用大数据处理哪些业务？可以用大数据实现那些价值？
-
-2.分析如下 HiveQL，生成的 MapReduce 执行程序，map 函数输入是什么？输出是什么？reduce函数输入是什么？输出是什么？
-
-```sql
-INSERT OVERWRITE TABLE pv_users
-SELECT pv.pageid, u.age
-FROM page_view pv
-	JOIN user u
-	ON (pv.userid = u.userid);
-```
-
-page_view 表 和 user 表结构与数据示例如下。
-
-![1611554208202](ArchitectureAdvanced.assets/1611554208202.png)
-
-
 
 
 
@@ -12559,6 +12559,33 @@ SELECT /*+ MAPJOIN(pv) */ pv.pageid, u.age FROM page_view pv
 
 
 
+
+### 作业与实践
+
+1.在你所在的公司（行业，领域），正在用大数据处理哪些业务？可以用大数据实现那些价值？
+
+2.分析如下 HiveQL，生成的 MapReduce 执行程序，map 函数输入是什么？输出是什么？reduce函数输入是什么？输出是什么？
+
+```sql
+INSERT OVERWRITE TABLE pv_users
+SELECT pv.pageid, u.age
+FROM page_view pv
+	JOIN user u
+	ON (pv.userid = u.userid);
+```
+
+page_view 表 和 user 表结构与数据示例如下。
+
+![1611554208202](ArchitectureAdvanced.assets/1611554208202.png)
+
+
+
+
+
+### Beyond Hive-Standard SQL on Hadoop
+
+- [Beyond Hive-Standard SQL on Hadoop.pdf](Data/Beyond Hive-Standard SQL on Hadoop.pdf)
+- [Beyond Hive-Standard SQL on Hadoop.pptx](Data/Beyond Hive-Standard SQL on Hadoop.pptx)
 
 
 
