@@ -13103,6 +13103,26 @@ Mahout K-means clustering( kmeans): 这个负载测试 Mahout 0.7中的 k-means 
 
 
 
+### Panthera SQL92 Test
+
+- [Panthera SQL92 Test](Data/Panthera SQL92 Test.pptx)
+
+
+
+### Spark源码性能优化案例分析
+
+- [Spark源码性能优化案例分析](Data/Spark源码性能优化案例分析.pptx)
+
+
+
+### 一个利用数据分析发现运营异常的案例分析
+
+- [一个利用数据分析发现运营异常的案例分析](Data/一个利用数据分析发现运营异常的案例分析.pdf)
+
+
+
+
+
 ### 作业与实践
 
 1.你所在的行业，常用的数据分析指标有哪些？请简述。
