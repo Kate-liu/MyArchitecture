@@ -2,7 +2,9 @@
 
 This is my Architecture Record.
 
+## Outline
 
+![](Data/BigHomeworkAnswer/Outline.png)
 
 
 
